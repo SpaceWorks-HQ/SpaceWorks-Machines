@@ -1,0 +1,431 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Runtime queries use DATABASE_URL, which may be a transaction pooler
+  // (for example Supabase Supavisor :6543 with ?pgbouncer=true). Migrations need a
+  // direct or session-mode connection, so the Prisma CLI uses DIRECT_URL.
+  // scripts/prisma.mjs defaults DIRECT_URL to DATABASE_URL when it is unset.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Accounts ────────────────────────────────────────────────────────────────
+
+model User {
+  id                 String    @id @default(cuid())
+  name               String?
+  email              String?   @unique
+  emailVerified      DateTime?
+  image              String?
+  /// User-selected profile image.
+  profileImageUrl    String?
+  /// Bcrypt hash for email + password sign-in. Null until the person sets a password.
+  passwordHash       String?
+  /// Incremented to invalidate all issued JWT sessions after account recovery.
+  sessionVersion     Int       @default(0)
+  /// AES-GCM encrypted TOTP seed. Never expose or log this value.
+  mfaSecretEncrypted String?
+  mfaEnabledAt       DateTime?
+  recoveryCodeHashes String[]  @default([])
+  /// Platform operators, created only on the server (docker/ops/admin.mjs).
+  isSuperAdmin       Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+
+  knownDevices       KnownDevice[]
+  spaceMembers       SpaceMember[]
+  spaceInvitesCreated SpaceInvite[] @relation("SpaceInviteCreatedBy")
+  spaceInvitesUsed    SpaceInvite[] @relation("SpaceInviteUsedBy")
+  auditEvents        AuditEvent[]
+  spaceReviews       SpaceReview[]
+}
+
+/// Short-lived, hashed, single-use tokens: email verification, password reset, sign-in codes and magic links.
+/// `identifier` names the purpose and the account ("magic-link:<userId>"); `token` is a SHA-256 hash.
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@index([identifier])
+}
+
+/// A browser that has signed in to an account before, recognised by a long-lived cookie stored only as a hash.
+/// A sign-in from anywhere else needs an emailed code (accounts without an authenticator) and sends an alert.
+model KnownDevice {
+  id          String   @id @default(cuid())
+  userId      String
+  tokenHash   String   @unique
+  label       String   @default("")
+  lastIp      String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lastSeenAt])
+}
+
+// ─── Spaces (tenants) ────────────────────────────────────────────────────────
+
+enum SpaceStatus {
+  PENDING_REVIEW
+  CHANGES_REQUESTED
+  ACTIVE
+  REJECTED
+  SUSPENDED
+  ARCHIVED
+}
+
+enum SpaceSource {
+  SELF_SIGNUP
+  SUPERADMIN
+}
+
+enum SpaceVisibility {
+  UNLISTED
+  PUBLIC
+}
+
+/// How makers join a space: OPEN joins at once, APPROVAL waits for a space manager, INVITE_ONLY needs an invite.
+enum JoinPolicy {
+  OPEN
+  APPROVAL
+  INVITE_ONLY
+}
+
+enum SpaceReviewAction {
+  SUBMITTED
+  RESUBMITTED
+  APPROVED
+  CHANGES_REQUESTED
+  REJECTED
+  SUSPENDED
+  REACTIVATED
+  ARCHIVED
+  CREATED
+}
+
+/// Roles in a space. Everyone except MEMBER is staff and needs an authenticator; MEMBER is a maker.
+/// Capabilities per role live in lib/permissionRoles.ts.
+enum SpaceRole {
+  OWNER
+  MANAGER
+  MACHINE_MANAGER
+  OPERATOR
+  TECHNICIAN
+  VIEWER
+  MEMBER
+}
+
+enum SpaceMemberStatus {
+  ACTIVE
+  PENDING
+  BLOCKED
+}
+
+/// A makerspace: the tenant. Only ACTIVE spaces run; see spaceAllows in lib/permissionRoles.ts.
+model Space {
+  id           String          @id @default(cuid())
+  name         String
+  slug         String          @unique
+  description  String          @default("")
+  logoUrl      String?
+  /// Space accent for its public pages (validated #RRGGBB).
+  accentColor  String?
+  status       SpaceStatus     @default(PENDING_REVIEW)
+  source       SpaceSource     @default(SELF_SIGNUP)
+  contactEmail String?
+  contactPhone String?
+  website      String?
+  addressLine  String?
+  city         String?
+  /// State, province or region, free text.
+  region       String?
+  postalCode   String?
+  /// ISO 3166-1 alpha-2.
+  country      String          @default("IN")
+  timezone     String          @default("Asia/Kolkata")
+  /// ISO 4217; every amount in this space is in its minor units.
+  currency     String          @default("INR")
+  /// Number formatting override, e.g. "en-IN"; null uses the currency's own locale.
+  locale       String?
+  /// PUBLIC spaces are listed at /spaces; UNLISTED ones are reachable only by their address.
+  visibility   SpaceVisibility @default(UNLISTED)
+  joinPolicy   JoinPolicy      @default(APPROVAL)
+  /// Set by the platform super admin; null means no limit.
+  memberLimit  Int?
+  staffLimit   Int?
+  /// Maker-checker for offline payments: the confirmer must differ from the recorder.
+  offlineConfirmationRequired Boolean @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  members         SpaceMember[]
+  invites         SpaceInvite[]
+  reviews         SpaceReview[]
+  assets          Asset[]
+  auditEvents     AuditEvent[]
+  paymentSettings SpacePaymentSettings?
+  emailSettings   SpaceEmailSettings?
+  chatChannels    ChatChannel[]
+
+  @@index([status, createdAt])
+  @@index([visibility, status])
+}
+
+/// Append-only history of a space's application and lifecycle decisions.
+model SpaceReview {
+  id                  String            @id @default(cuid())
+  spaceId             String
+  action              SpaceReviewAction
+  actorUserId         String?
+  /// Required for REJECTED and CHANGES_REQUESTED; shown to the applicant.
+  reason              String?
+  /// The application as submitted at SUBMITTED/RESUBMITTED.
+  applicationSnapshot Json?
+  createdAt           DateTime          @default(now())
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([spaceId, createdAt])
+  @@index([action, createdAt])
+}
+
+/// A person's role in a space: staff (OWNER … VIEWER) or a maker (MEMBER).
+model SpaceMember {
+  id        String            @id @default(cuid())
+  userId    String
+  spaceId   String
+  role      SpaceRole
+  status    SpaceMemberStatus @default(ACTIVE)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, spaceId])
+  @@unique([spaceId, id])
+  @@index([spaceId, role, status])
+}
+
+/// A link that adds someone to a space with a role. With `email` set, only that verified address may accept.
+model SpaceInvite {
+  id              String    @id @default(cuid())
+  spaceId         String
+  token           String    @unique
+  role            SpaceRole @default(MEMBER)
+  createdByUserId String?
+  email           String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime?
+  usedAt          DateTime?
+  usedByUserId    String?
+
+  space     Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("SpaceInviteCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  usedBy    User? @relation("SpaceInviteUsedBy", fields: [usedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([spaceId, createdAt])
+  @@index([usedAt])
+}
+
+// ─── Operations ──────────────────────────────────────────────────────────────
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  action      String
+  actorUserId String?
+  spaceId     String?
+  targetType  String?
+  targetId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  actor User?  @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  space Space? @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+
+  @@index([spaceId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+}
+
+/// Email and chat deliveries. SQL is the durable outbox; the queue carries only row ids.
+model OutboxMessage {
+  id          String       @id @default(cuid())
+  kind        String
+  payload     Json
+  status      OutboxStatus @default(PENDING)
+  attempts    Int          @default(0)
+  availableAt DateTime     @default(now())
+  lockedAt    DateTime?
+  sentAt      DateTime?
+  lastError   String?
+  createdAt   DateTime     @default(now())
+
+  @@index([status, availableAt])
+  @@index([createdAt])
+}
+
+/// One-row operational state for scheduled work, separate from the human audit trail.
+model OperationalHeartbeat {
+  key             String    @id
+  lastStartedAt   DateTime?
+  lastSucceededAt DateTime?
+  lastSent        Int       @default(0)
+  lastFailed      Int       @default(0)
+  lastError       String?
+  updatedAt       DateTime  @updatedAt
+}
+
+/// Instance-wide, super-admin-managed controls. The singleton row is created on first change.
+model InstanceSetting {
+  id                       String    @id
+  allowNewUserSignups      Boolean   @default(true)
+  /// Self-service space applications (/start). Super admins can always create spaces.
+  allowSpaceApplications   Boolean   @default(true)
+  emailFrom                String?
+  smtpService              String?
+  smtpHost                 String?
+  smtpPort                 Int?
+  smtpSecure               Boolean   @default(false)
+  smtpUser                 String?
+  smtpPasswordEncrypted    String?
+  smtpAllowUnauthenticated Boolean   @default(false)
+  backupProvider           String?
+  backupLastSuccessAt      DateTime?
+  backupRetentionDays      Int?
+  updatedAt                DateTime  @updatedAt
+}
+
+/// Stored files (Silo/S3/R2) for per-space storage accounting, or the database fallback.
+model Asset {
+  id          String   @id @default(cuid())
+  spaceId     String?
+  /// Provider-specific object key (or path).
+  key         String   @unique
+  publicUrl   String?
+  contentType String?
+  byteSize    BigInt?
+  provider    String   @default("unknown")
+  fileData    Bytes?
+  createdAt   DateTime @default(now())
+
+  space Space? @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+  @@index([createdAt])
+  @@index([provider])
+}
+
+// ─── Payments (gateway settings only; Phase 3 adds payments for jobs) ───────
+
+enum GatewayProvider {
+  NONE
+  RAZORPAY
+  STRIPE
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  STRIPE
+  OFFLINE
+}
+
+/// The space's own payment gateway. Secrets are AES-GCM encrypted with PAYMENT_SECRETS_KEY, bound to the space.
+model SpacePaymentSettings {
+  spaceId                String          @id
+  provider               GatewayProvider @default(NONE)
+  /// Razorpay key id (public). Stripe needs only the secret key.
+  keyId                  String?
+  secretEncrypted        String?
+  webhookSecretEncrypted String?
+  /// Unguessable code in the webhook URL that identifies the space.
+  webhookPublicCode      String          @unique
+  testMode               Boolean         @default(true)
+  verifiedAt             DateTime?
+  upiVpa                 String?
+  upiPayeeName           String?
+  offlineInstructions    String          @default("")
+  updatedAt              DateTime        @updatedAt
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+}
+
+/// Webhook idempotency: a provider event is applied once.
+model ProcessedWebhookEvent {
+  provider   PaymentProvider
+  eventId    String
+  spaceId    String
+  receivedAt DateTime        @default(now())
+
+  @@id([provider, eventId])
+  @@index([spaceId, receivedAt])
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+/// A space's own outgoing email for maker-facing emails. Without it (or while disabled) those emails go through
+/// the platform's SMTP, sent in the space's name with replies to its contact email. Account emails (sign-in,
+/// password reset, verification) always use the platform's.
+model SpaceEmailSettings {
+  spaceId               String    @id
+  enabled               Boolean   @default(false)
+  fromName              String    @default("")
+  fromAddress           String?
+  replyTo               String?
+  smtpHost              String?
+  smtpPort              Int       @default(587)
+  /// Implicit TLS (port 465); otherwise STARTTLS is required in production.
+  smtpSecure            Boolean   @default(false)
+  smtpUser              String?
+  smtpPasswordEncrypted String?
+  verifiedAt            DateTime?
+  updatedAt             DateTime  @updatedAt
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+}
+
+enum ChatChannelKind {
+  SLACK
+  DISCORD
+  MATTERMOST
+  TELEGRAM
+  WHATSAPP
+}
+
+/// A chat destination for staff alerts. Webhook URLs, bot tokens and WhatsApp credentials live encrypted in
+/// `configEncrypted`; `target` is a safe, non-secret description for the settings page.
+model ChatChannel {
+  id              String          @id @default(cuid())
+  spaceId         String
+  kind            ChatChannelKind
+  name            String
+  configEncrypted String
+  target          String          @default("")
+  events          String[]
+  includeNames    Boolean         @default(false)
+  enabled         Boolean         @default(true)
+  lastDeliveredAt DateTime?
+  lastError       String?
+  failures        Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@unique([spaceId, id])
+  @@index([spaceId])
+}
