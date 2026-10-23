@@ -273,6 +273,36 @@
       "id": "chat-channels:testChatChannel"
     },
     {
+      "module": "app/actions/consumables",
+      "name": "createPoolAction",
+      "id": "consumables:createPoolAction"
+    },
+    {
+      "module": "app/actions/consumables",
+      "name": "updatePoolAction",
+      "id": "consumables:updatePoolAction"
+    },
+    {
+      "module": "app/actions/consumables",
+      "name": "restockPoolAction",
+      "id": "consumables:restockPoolAction"
+    },
+    {
+      "module": "app/actions/consumables",
+      "name": "correctPoolAction",
+      "id": "consumables:correctPoolAction"
+    },
+    {
+      "module": "app/actions/consumables",
+      "name": "retirePoolAction",
+      "id": "consumables:retirePoolAction"
+    },
+    {
+      "module": "app/actions/consumables",
+      "name": "setPoolPublicAction",
+      "id": "consumables:setPoolPublicAction"
+    },
+    {
       "module": "app/actions/instance-settings",
       "name": "setNewUserRegistrationEnabled",
       "id": "instance-settings:setNewUserRegistrationEnabled"
@@ -316,6 +346,76 @@
       "module": "app/actions/ip-blocks",
       "name": "unblockAddress",
       "id": "ip-blocks:unblockAddress"
+    },
+    {
+      "module": "app/actions/machine-files",
+      "name": "updateMachinePhotoAction",
+      "id": "machine-files:updateMachinePhotoAction"
+    },
+    {
+      "module": "app/actions/machine-files",
+      "name": "removeMachinePhotoAction",
+      "id": "machine-files:removeMachinePhotoAction"
+    },
+    {
+      "module": "app/actions/machine-files",
+      "name": "reorderMachinePhotosAction",
+      "id": "machine-files:reorderMachinePhotosAction"
+    },
+    {
+      "module": "app/actions/machine-files",
+      "name": "updateMachineDocumentAction",
+      "id": "machine-files:updateMachineDocumentAction"
+    },
+    {
+      "module": "app/actions/machine-files",
+      "name": "removeMachineDocumentAction",
+      "id": "machine-files:removeMachineDocumentAction"
+    },
+    {
+      "module": "app/actions/machine-types",
+      "name": "createMachineTypeAction",
+      "id": "machine-types:createMachineTypeAction"
+    },
+    {
+      "module": "app/actions/machine-types",
+      "name": "updateMachineTypeSection",
+      "id": "machine-types:updateMachineTypeSection"
+    },
+    {
+      "module": "app/actions/machine-types",
+      "name": "setMachineTypeArchivedAction",
+      "id": "machine-types:setMachineTypeArchivedAction"
+    },
+    {
+      "module": "app/actions/machine-types",
+      "name": "reorderMachineTypesAction",
+      "id": "machine-types:reorderMachineTypesAction"
+    },
+    {
+      "module": "app/actions/machines",
+      "name": "createMachineAction",
+      "id": "machines:createMachineAction"
+    },
+    {
+      "module": "app/actions/machines",
+      "name": "updateMachineAction",
+      "id": "machines:updateMachineAction"
+    },
+    {
+      "module": "app/actions/machines",
+      "name": "changeMachineStatusAction",
+      "id": "machines:changeMachineStatusAction"
+    },
+    {
+      "module": "app/actions/machines",
+      "name": "setMachineRetiredAction",
+      "id": "machines:setMachineRetiredAction"
+    },
+    {
+      "module": "app/actions/machines",
+      "name": "setMachineFlagsAction",
+      "id": "machines:setMachineFlagsAction"
     },
     {
       "module": "app/actions/media",
@@ -406,6 +506,11 @@
       "module": "app/actions/space-invites",
       "name": "revokeSpaceInvite",
       "id": "space-invites:revokeSpaceInvite"
+    },
+    {
+      "module": "app/actions/space-job-settings",
+      "name": "setLowStockAlerts",
+      "id": "space-job-settings:setLowStockAlerts"
     },
     {
       "module": "app/actions/space",

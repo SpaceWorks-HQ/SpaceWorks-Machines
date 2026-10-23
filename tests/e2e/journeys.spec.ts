@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { db, latestPayload, localPath } from "./outbox";
 import { nextTotp } from "./totp";
+import { clientAddressHeaders } from "./clientAddress";
 
 // The auth and space journeys end to end, on a fresh database: sign-up, password sign-in, magic link,
 // authenticator enrolment, a space created by a super admin, and a maker joining it. Needs DATABASE_URL (the
@@ -19,9 +20,13 @@ const slug = `kochi-makers-${run}`;
 let ownerSecret = "";
 
 async function fresh(browser: Browser) {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ extraHTTPHeaders: clientAddressHeaders() });
   return context.newPage();
 }
+
+test.beforeEach(async ({ page }) => {
+  await page.setExtraHTTPHeaders(clientAddressHeaders());
+});
 
 async function signUp(page: Page, person: { name: string; email: string }) {
   await page.goto("/login", { waitUntil: "networkidle" });
@@ -32,7 +37,7 @@ async function signUp(page: Page, person: { name: string; email: string }) {
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("status")).toContainText("check your inbox");
   const { verificationUrl } = await latestPayload("email-verification", person.email);
-  await page.goto(localPath(verificationUrl));
+  await page.goto(localPath(verificationUrl), { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Confirm email" }).click();
   await expect(page).toHaveURL(/verified=1/);
 }
@@ -106,12 +111,12 @@ test("a maker signs in with an emailed link and asks to join, and the owner appr
   await makerPage.getByRole("button", { name: "Email me a sign-in link" }).click();
   await expect(makerPage.getByRole("status")).toContainText("a sign-in link is on its way");
   const { url } = await latestPayload("magic-link", maker.email);
-  await makerPage.goto(localPath(url));
+  await makerPage.goto(localPath(url), { waitUntil: "networkidle" });
   await makerPage.getByRole("button", { name: "Sign in" }).click();
   await makerPage.waitForURL((next) => !next.pathname.startsWith("/login"));
   // The link works once.
   const again = await fresh(browser);
-  await again.goto(localPath(url));
+  await again.goto(localPath(url), { waitUntil: "networkidle" });
   await again.getByRole("button", { name: "Sign in" }).click();
   await expect(again.getByRole("alert").filter({ hasText: "expired" })).toContainText("expired or has already been used");
 

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { nextTotp } from "./totp";
+import { clientAddressHeaders } from "./clientAddress";
 
 // Role journeys over the demo data from `npm run db:seed-demo`. The demo password comes from DEMO_PASSWORD
 // and the staff authenticator from DEMO_MFA_SECRET; without them these tests are skipped.
@@ -8,6 +9,7 @@ const mfaSecret = process.env.DEMO_MFA_SECRET;
 test.skip(!password || !mfaSecret, "DEMO_PASSWORD and DEMO_MFA_SECRET must be set; seed the demo data to run signed-in journeys.");
 
 async function signIn(page: Page, email: string) {
+  await page.setExtraHTTPHeaders(clientAddressHeaders());
   // Type only after hydration, or React resets the controlled fields.
   await page.goto("/login", { waitUntil: "networkidle" });
   await page.locator('input[autocomplete="email"]').fill(email);

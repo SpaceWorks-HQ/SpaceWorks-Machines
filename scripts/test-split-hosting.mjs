@@ -21,6 +21,13 @@ if (process.argv[2] === "serve-frontend") {
   await run("npm", ["run", "start", "--workspace=frontend"], frontendEnvironment(process.env));
 } else {
   const monolith = process.argv.includes("--monolith");
+  // Explicit opt-in for pre-provisioned, disposable local test services.
+  const externalServices = process.argv.includes("--external-services");
+  if (externalServices && (!process.env.DATABASE_URL || !process.env.REDIS_URL)) {
+    throw new Error("External test services require DATABASE_URL and REDIS_URL.");
+  }
+  // With DEMO_PASSWORD set, the disposable database gets the demo seed so signed-in journeys run.
+  const demo = process.env.DEMO_PASSWORD ? { DEMO_PASSWORD: process.env.DEMO_PASSWORD, DEMO_MFA_SECRET: process.env.DEMO_MFA_SECRET ?? "" } : {};
   const freePort = () => new Promise((resolve, reject) => {
     const server = createServer(); server.on("error", reject);
     server.listen(0, "127.0.0.1", () => { const port = server.address().port; server.close(() => resolve(port)); });
@@ -31,12 +38,12 @@ if (process.argv[2] === "serve-frontend") {
   const hex = () => randomBytes(32).toString("hex"), key = () => randomBytes(32).toString("base64");
   const password = hex();
   const env = { ...system, SWM_DISABLE_BUILD_CACHE: "1", __NEXT_PROCESSED_ENV: "true", CI: "true", ALLOW_INSECURE_PRODUCTION_TESTS: "1", NODE_ENV: "production", NEXT_TELEMETRY_DISABLED: "1",
-    DATABASE_URL: `postgresql://swm_split:${password}@127.0.0.1:${pgPort}/swm_split_test`,
-    DIRECT_URL: `postgresql://swm_split:${password}@127.0.0.1:${pgPort}/swm_split_test`,
-    REDIS_URL: `redis://127.0.0.1:${redisPort}`, POSTGRES_PASSWORD: password,
+    DATABASE_URL: externalServices ? process.env.DATABASE_URL : `postgresql://swm_split:${password}@127.0.0.1:${pgPort}/swm_split_test`,
+    DIRECT_URL: externalServices ? (process.env.DIRECT_URL || process.env.DATABASE_URL) : `postgresql://swm_split:${password}@127.0.0.1:${pgPort}/swm_split_test`,
+    REDIS_URL: externalServices ? process.env.REDIS_URL : `redis://127.0.0.1:${redisPort}`, POSTGRES_PASSWORD: password, ...demo,
     AUTH_URL: "http://127.0.0.1:3100", NEXT_PUBLIC_BASE_URL: "http://127.0.0.1:3100",
     BACKEND_ORIGIN: "http://127.0.0.1:3200", NEXT_PUBLIC_BACKEND_ORIGIN: monolith ? "" : "http://127.0.0.1:3200",
-    AUTH_SECRET: hex(), MFA_ENCRYPTION_KEY: key(), NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: key(), FRONTEND_ACTIONS_KEY: key(), FRONTEND_GATEWAY_SECRET: hex(),
+    AUTH_SECRET: hex(), MFA_ENCRYPTION_KEY: key(), PAYMENT_SECRETS_KEY: key(), NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: key(), FRONTEND_ACTIONS_KEY: key(), FRONTEND_GATEWAY_SECRET: hex(),
     HEALTHCHECK_SECRET: hex(), CRON_SECRET: hex(), SUPER_ADMIN_EMAIL: "admin@example.test",
     TRUSTED_PROXY_IP_HEADER: "x-real-ip", FRONTEND_TRUSTED_IP_HEADER: "x-real-ip",
     EMAIL_FROM: "Test <test@example.test>", SMTP_HOST: "127.0.0.1", SMTP_PORT: "9", SMTP_USER: "disposable", SMTP_PASSWORD: hex(),
@@ -47,20 +54,24 @@ if (process.argv[2] === "serve-frontend") {
   let backend;
   const cleanup = () => {
     backend?.kill("SIGTERM");
-    for (const name of [pg, redis]) spawnSync("docker", ["rm", "--force", "--volumes", name], { stdio: "ignore", env: system, timeout: 15_000 });
+    if (!externalServices) for (const name of [pg, redis]) spawnSync("docker", ["rm", "--force", "--volumes", name], { stdio: "ignore", env: system, timeout: 15_000 });
   };
   try {
     // Fail before making containers if either application's fixed test port is busy.
     for (const port of [3100, 3200]) await new Promise((resolve, reject) => { const server = createServer(); server.on("error", () => reject(new Error(`Test port ${port} is already in use.`))); server.listen(port, "127.0.0.1", () => server.close(resolve)); });
-    await run("docker", ["run", "-d", "--name", pg, "-e", "POSTGRES_USER=swm_split", "-e", "POSTGRES_DB=swm_split_test", "-e", "POSTGRES_PASSWORD", "-p", `127.0.0.1:${pgPort}:5432`, "postgres:16-alpine"], env);
-    await run("docker", ["run", "-d", "--name", redis, "-p", `127.0.0.1:${redisPort}:6379`, "redis:7-alpine"], env);
     let ready = false;
-    for (let attempt = 0; attempt < 60; attempt++) {
-      if (spawnSync("docker", ["exec", pg, "pg_isready", "-U", "swm_split", "-d", "swm_split_test"], { stdio: "ignore", env: system }).status === 0) { ready = true; break; }
-      await delay(500);
+    if (!externalServices) {
+      await run("docker", ["run", "-d", "--name", pg, "-e", "POSTGRES_USER=swm_split", "-e", "POSTGRES_DB=swm_split_test", "-e", "POSTGRES_PASSWORD", "-p", `127.0.0.1:${pgPort}:5432`, "postgres:16-alpine"], env);
+      await run("docker", ["run", "-d", "--name", redis, "-p", `127.0.0.1:${redisPort}:6379`, "redis:7-alpine"], env);
+      for (let attempt = 0; attempt < 60; attempt++) {
+        if (spawnSync("docker", ["exec", pg, "pg_isready", "-U", "swm_split", "-d", "swm_split_test"], { stdio: "ignore", env: system }).status === 0) { ready = true; break; }
+        await delay(500);
+      }
+      if (!ready) throw new Error("Disposable PostgreSQL did not become ready.");
     }
-    if (!ready) throw new Error("Disposable PostgreSQL did not become ready.");
     await run(process.execPath, ["scripts/prisma.mjs", "migrate", "deploy"], env);
+    // The seed refuses production; it shares this run's MFA key so the server can read the demo authenticator.
+    if (demo.DEMO_PASSWORD) await run(process.execPath, ["scripts/seed-demo.mjs"], { ...env, NODE_ENV: "development" });
     await run("npm", ["run", "build"], env);
     await run(process.execPath, ["scripts/prepare-standalone.mjs"], env);
     for (const name of [".env", ".env.local", ".env.production", ".env.production.local", ".env.development"]) await rm(`.next/standalone/${name}`, { force: true });

@@ -54,45 +54,66 @@ import { requestMagicLink as endpoint50 } from "@/app/actions/auth";
 import { saveChatChannel as endpoint51 } from "@/app/actions/chat-channels";
 import { deleteChatChannel as endpoint52 } from "@/app/actions/chat-channels";
 import { testChatChannel as endpoint53 } from "@/app/actions/chat-channels";
-import { setNewUserRegistrationEnabled as endpoint54 } from "@/app/actions/instance-settings";
-import { setSpaceApplicationsEnabled as endpoint55 } from "@/app/actions/instance-settings";
-import { saveInstanceServiceSettings as endpoint56 } from "@/app/actions/instance-settings";
-import { deliverInstanceOutbox as endpoint57 } from "@/app/actions/instance";
-import { purgeExpiredVerificationTokens as endpoint58 } from "@/app/actions/instance";
-import { retryFailedOutboxMessages as endpoint59 } from "@/app/actions/instance";
-import { recordBackupRestoreVerification as endpoint60 } from "@/app/actions/instance";
-import { acceptSpaceInvite as endpoint61 } from "@/app/actions/invite-acceptance";
-import { unblockAddress as endpoint62 } from "@/app/actions/ip-blocks";
-import { uploadSpaceLogo as endpoint63 } from "@/app/actions/media";
-import { uploadAccountProfileImage as endpoint64 } from "@/app/actions/media";
-import { requestPasswordReset as endpoint65 } from "@/app/actions/password-reset";
-import { confirmPasswordReset as endpoint66 } from "@/app/actions/password-reset";
-import { savePaymentGateway as endpoint67 } from "@/app/actions/payment-settings";
-import { testPaymentGateway as endpoint68 } from "@/app/actions/payment-settings";
-import { saveOfflinePaymentSettings as endpoint69 } from "@/app/actions/payment-settings";
-import { beginMfaEnrollment as endpoint70 } from "@/app/actions/security";
-import { confirmMfaEnrollment as endpoint71 } from "@/app/actions/security";
-import { disableMfa as endpoint72 } from "@/app/actions/security";
-import { revokeAllSessions as endpoint73 } from "@/app/actions/security";
-import { checkSpaceSlug as endpoint74 } from "@/app/actions/space-application";
-import { submitSpaceApplication as endpoint75 } from "@/app/actions/space-application";
-import { resubmitSpaceApplication as endpoint76 } from "@/app/actions/space-application";
-import { saveSpaceEmailSettings as endpoint77 } from "@/app/actions/space-email";
-import { sendSpaceTestEmail as endpoint78 } from "@/app/actions/space-email";
-import { createSpaceInvite as endpoint79 } from "@/app/actions/space-invites";
-import { revokeSpaceInvite as endpoint80 } from "@/app/actions/space-invites";
-import { updateSpace as endpoint81 } from "@/app/actions/space";
-import { updateSpaceDetails as endpoint82 } from "@/app/actions/space";
-import { setJoinPolicy as endpoint83 } from "@/app/actions/space";
-import { reviewSpace as endpoint84 } from "@/app/actions/super-admin-spaces";
-import { setSpaceLimits as endpoint85 } from "@/app/actions/super-admin-spaces";
-import { createSpaceForOwner as endpoint86 } from "@/app/actions/super-admin-spaces";
-import { resendOwnerInvite as endpoint87 } from "@/app/actions/super-admin-spaces";
-import { setSpaceVisibility as endpoint88 } from "@/app/actions/super-admin-spaces";
-import { updateSpaceRole as endpoint89 } from "@/app/actions/team";
-import { removeSpaceMember as endpoint90 } from "@/app/actions/team";
-import { decideMember as endpoint91 } from "@/app/actions/team";
-import { deleteSpace as endpoint92 } from "@/app/actions/team";
+import { createPoolAction as endpoint54 } from "@/app/actions/consumables";
+import { updatePoolAction as endpoint55 } from "@/app/actions/consumables";
+import { restockPoolAction as endpoint56 } from "@/app/actions/consumables";
+import { correctPoolAction as endpoint57 } from "@/app/actions/consumables";
+import { retirePoolAction as endpoint58 } from "@/app/actions/consumables";
+import { setPoolPublicAction as endpoint59 } from "@/app/actions/consumables";
+import { setNewUserRegistrationEnabled as endpoint60 } from "@/app/actions/instance-settings";
+import { setSpaceApplicationsEnabled as endpoint61 } from "@/app/actions/instance-settings";
+import { saveInstanceServiceSettings as endpoint62 } from "@/app/actions/instance-settings";
+import { deliverInstanceOutbox as endpoint63 } from "@/app/actions/instance";
+import { purgeExpiredVerificationTokens as endpoint64 } from "@/app/actions/instance";
+import { retryFailedOutboxMessages as endpoint65 } from "@/app/actions/instance";
+import { recordBackupRestoreVerification as endpoint66 } from "@/app/actions/instance";
+import { acceptSpaceInvite as endpoint67 } from "@/app/actions/invite-acceptance";
+import { unblockAddress as endpoint68 } from "@/app/actions/ip-blocks";
+import { updateMachinePhotoAction as endpoint69 } from "@/app/actions/machine-files";
+import { removeMachinePhotoAction as endpoint70 } from "@/app/actions/machine-files";
+import { reorderMachinePhotosAction as endpoint71 } from "@/app/actions/machine-files";
+import { updateMachineDocumentAction as endpoint72 } from "@/app/actions/machine-files";
+import { removeMachineDocumentAction as endpoint73 } from "@/app/actions/machine-files";
+import { createMachineTypeAction as endpoint74 } from "@/app/actions/machine-types";
+import { updateMachineTypeSection as endpoint75 } from "@/app/actions/machine-types";
+import { setMachineTypeArchivedAction as endpoint76 } from "@/app/actions/machine-types";
+import { reorderMachineTypesAction as endpoint77 } from "@/app/actions/machine-types";
+import { createMachineAction as endpoint78 } from "@/app/actions/machines";
+import { updateMachineAction as endpoint79 } from "@/app/actions/machines";
+import { changeMachineStatusAction as endpoint80 } from "@/app/actions/machines";
+import { setMachineRetiredAction as endpoint81 } from "@/app/actions/machines";
+import { setMachineFlagsAction as endpoint82 } from "@/app/actions/machines";
+import { uploadSpaceLogo as endpoint83 } from "@/app/actions/media";
+import { uploadAccountProfileImage as endpoint84 } from "@/app/actions/media";
+import { requestPasswordReset as endpoint85 } from "@/app/actions/password-reset";
+import { confirmPasswordReset as endpoint86 } from "@/app/actions/password-reset";
+import { savePaymentGateway as endpoint87 } from "@/app/actions/payment-settings";
+import { testPaymentGateway as endpoint88 } from "@/app/actions/payment-settings";
+import { saveOfflinePaymentSettings as endpoint89 } from "@/app/actions/payment-settings";
+import { beginMfaEnrollment as endpoint90 } from "@/app/actions/security";
+import { confirmMfaEnrollment as endpoint91 } from "@/app/actions/security";
+import { disableMfa as endpoint92 } from "@/app/actions/security";
+import { revokeAllSessions as endpoint93 } from "@/app/actions/security";
+import { checkSpaceSlug as endpoint94 } from "@/app/actions/space-application";
+import { submitSpaceApplication as endpoint95 } from "@/app/actions/space-application";
+import { resubmitSpaceApplication as endpoint96 } from "@/app/actions/space-application";
+import { saveSpaceEmailSettings as endpoint97 } from "@/app/actions/space-email";
+import { sendSpaceTestEmail as endpoint98 } from "@/app/actions/space-email";
+import { createSpaceInvite as endpoint99 } from "@/app/actions/space-invites";
+import { revokeSpaceInvite as endpoint100 } from "@/app/actions/space-invites";
+import { setLowStockAlerts as endpoint101 } from "@/app/actions/space-job-settings";
+import { updateSpace as endpoint102 } from "@/app/actions/space";
+import { updateSpaceDetails as endpoint103 } from "@/app/actions/space";
+import { setJoinPolicy as endpoint104 } from "@/app/actions/space";
+import { reviewSpace as endpoint105 } from "@/app/actions/super-admin-spaces";
+import { setSpaceLimits as endpoint106 } from "@/app/actions/super-admin-spaces";
+import { createSpaceForOwner as endpoint107 } from "@/app/actions/super-admin-spaces";
+import { resendOwnerInvite as endpoint108 } from "@/app/actions/super-admin-spaces";
+import { setSpaceVisibility as endpoint109 } from "@/app/actions/super-admin-spaces";
+import { updateSpaceRole as endpoint110 } from "@/app/actions/team";
+import { removeSpaceMember as endpoint111 } from "@/app/actions/team";
+import { decideMember as endpoint112 } from "@/app/actions/team";
+import { deleteSpace as endpoint113 } from "@/app/actions/team";
 
 export const viewReaders = Object.freeze({
   "app__account__layout:loadAccountShell": endpoint0,
@@ -151,43 +172,64 @@ export const backendActions = Object.freeze({
   "chat-channels:saveChatChannel": endpoint51,
   "chat-channels:deleteChatChannel": endpoint52,
   "chat-channels:testChatChannel": endpoint53,
-  "instance-settings:setNewUserRegistrationEnabled": endpoint54,
-  "instance-settings:setSpaceApplicationsEnabled": endpoint55,
-  "instance-settings:saveInstanceServiceSettings": endpoint56,
-  "instance:deliverInstanceOutbox": endpoint57,
-  "instance:purgeExpiredVerificationTokens": endpoint58,
-  "instance:retryFailedOutboxMessages": endpoint59,
-  "instance:recordBackupRestoreVerification": endpoint60,
-  "invite-acceptance:acceptSpaceInvite": endpoint61,
-  "ip-blocks:unblockAddress": endpoint62,
-  "media:uploadSpaceLogo": endpoint63,
-  "media:uploadAccountProfileImage": endpoint64,
-  "password-reset:requestPasswordReset": endpoint65,
-  "password-reset:confirmPasswordReset": endpoint66,
-  "payment-settings:savePaymentGateway": endpoint67,
-  "payment-settings:testPaymentGateway": endpoint68,
-  "payment-settings:saveOfflinePaymentSettings": endpoint69,
-  "security:beginMfaEnrollment": endpoint70,
-  "security:confirmMfaEnrollment": endpoint71,
-  "security:disableMfa": endpoint72,
-  "security:revokeAllSessions": endpoint73,
-  "space-application:checkSpaceSlug": endpoint74,
-  "space-application:submitSpaceApplication": endpoint75,
-  "space-application:resubmitSpaceApplication": endpoint76,
-  "space-email:saveSpaceEmailSettings": endpoint77,
-  "space-email:sendSpaceTestEmail": endpoint78,
-  "space-invites:createSpaceInvite": endpoint79,
-  "space-invites:revokeSpaceInvite": endpoint80,
-  "space:updateSpace": endpoint81,
-  "space:updateSpaceDetails": endpoint82,
-  "space:setJoinPolicy": endpoint83,
-  "super-admin-spaces:reviewSpace": endpoint84,
-  "super-admin-spaces:setSpaceLimits": endpoint85,
-  "super-admin-spaces:createSpaceForOwner": endpoint86,
-  "super-admin-spaces:resendOwnerInvite": endpoint87,
-  "super-admin-spaces:setSpaceVisibility": endpoint88,
-  "team:updateSpaceRole": endpoint89,
-  "team:removeSpaceMember": endpoint90,
-  "team:decideMember": endpoint91,
-  "team:deleteSpace": endpoint92,
+  "consumables:createPoolAction": endpoint54,
+  "consumables:updatePoolAction": endpoint55,
+  "consumables:restockPoolAction": endpoint56,
+  "consumables:correctPoolAction": endpoint57,
+  "consumables:retirePoolAction": endpoint58,
+  "consumables:setPoolPublicAction": endpoint59,
+  "instance-settings:setNewUserRegistrationEnabled": endpoint60,
+  "instance-settings:setSpaceApplicationsEnabled": endpoint61,
+  "instance-settings:saveInstanceServiceSettings": endpoint62,
+  "instance:deliverInstanceOutbox": endpoint63,
+  "instance:purgeExpiredVerificationTokens": endpoint64,
+  "instance:retryFailedOutboxMessages": endpoint65,
+  "instance:recordBackupRestoreVerification": endpoint66,
+  "invite-acceptance:acceptSpaceInvite": endpoint67,
+  "ip-blocks:unblockAddress": endpoint68,
+  "machine-files:updateMachinePhotoAction": endpoint69,
+  "machine-files:removeMachinePhotoAction": endpoint70,
+  "machine-files:reorderMachinePhotosAction": endpoint71,
+  "machine-files:updateMachineDocumentAction": endpoint72,
+  "machine-files:removeMachineDocumentAction": endpoint73,
+  "machine-types:createMachineTypeAction": endpoint74,
+  "machine-types:updateMachineTypeSection": endpoint75,
+  "machine-types:setMachineTypeArchivedAction": endpoint76,
+  "machine-types:reorderMachineTypesAction": endpoint77,
+  "machines:createMachineAction": endpoint78,
+  "machines:updateMachineAction": endpoint79,
+  "machines:changeMachineStatusAction": endpoint80,
+  "machines:setMachineRetiredAction": endpoint81,
+  "machines:setMachineFlagsAction": endpoint82,
+  "media:uploadSpaceLogo": endpoint83,
+  "media:uploadAccountProfileImage": endpoint84,
+  "password-reset:requestPasswordReset": endpoint85,
+  "password-reset:confirmPasswordReset": endpoint86,
+  "payment-settings:savePaymentGateway": endpoint87,
+  "payment-settings:testPaymentGateway": endpoint88,
+  "payment-settings:saveOfflinePaymentSettings": endpoint89,
+  "security:beginMfaEnrollment": endpoint90,
+  "security:confirmMfaEnrollment": endpoint91,
+  "security:disableMfa": endpoint92,
+  "security:revokeAllSessions": endpoint93,
+  "space-application:checkSpaceSlug": endpoint94,
+  "space-application:submitSpaceApplication": endpoint95,
+  "space-application:resubmitSpaceApplication": endpoint96,
+  "space-email:saveSpaceEmailSettings": endpoint97,
+  "space-email:sendSpaceTestEmail": endpoint98,
+  "space-invites:createSpaceInvite": endpoint99,
+  "space-invites:revokeSpaceInvite": endpoint100,
+  "space-job-settings:setLowStockAlerts": endpoint101,
+  "space:updateSpace": endpoint102,
+  "space:updateSpaceDetails": endpoint103,
+  "space:setJoinPolicy": endpoint104,
+  "super-admin-spaces:reviewSpace": endpoint105,
+  "super-admin-spaces:setSpaceLimits": endpoint106,
+  "super-admin-spaces:createSpaceForOwner": endpoint107,
+  "super-admin-spaces:resendOwnerInvite": endpoint108,
+  "super-admin-spaces:setSpaceVisibility": endpoint109,
+  "team:updateSpaceRole": endpoint110,
+  "team:removeSpaceMember": endpoint111,
+  "team:decideMember": endpoint112,
+  "team:deleteSpace": endpoint113,
 });
