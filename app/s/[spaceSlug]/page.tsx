@@ -1,10 +1,12 @@
-import { Cog, Globe, Mail, MapPin, Phone } from "lucide-react";
+import Link from "next/link";
+import { Globe, Mail, MapPin, Phone } from "lucide-react";
 import { loadPublicSpacePage } from "@/lib/views/app__s__spaceSlug__page";
 import { JoinSpaceCard } from "@/components/public/JoinSpaceCard";
-import { EmptyState, SpaceLogo } from "@/components/ui/display";
+import { SpaceLogo } from "@/components/ui/display";
+import { buttonClasses } from "@/components/ui/button";
 
 export default async function PublicSpacePage({ params }: { params: Promise<{ spaceSlug: string }> }) {
-  const { space, takingMakers, viewer } = await loadPublicSpacePage({ params });
+  const { space, takingMakers, machinesVisible, viewer } = await loadPublicSpacePage({ params });
   const place = [space.city, space.region, space.country].filter(Boolean).join(", ");
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-12 px-4 py-10 sm:px-6 lg:py-16">
@@ -23,10 +25,11 @@ export default async function PublicSpacePage({ params }: { params: Promise<{ sp
         </dl>
       </section>
 
-      <section aria-labelledby="machines" className="flex flex-col gap-6">
+      {machinesVisible ? <section aria-labelledby="machines" className="flex flex-col items-start gap-6">
         <h2 id="machines" className="text-h1 text-ink">Machines</h2>
-        <EmptyState icon={<Cog />} title="Machines are on their way">The machine catalogue, live status and job requests arrive in the next release.</EmptyState>
-      </section>
+        <p className="text-body-l text-ink-secondary">Explore our machines, live status, specifications and documents.</p>
+        <Link href={`/s/${space.slug}/machines`} className={buttonClasses({ variant: "secondary" })}>Browse machines</Link>
+      </section> : null}
     </div>
   );
 }

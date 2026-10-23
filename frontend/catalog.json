@@ -46,6 +46,11 @@
       "id": "app__dashboard__spaceSlug__consumables__page:loadConsumablesView"
     },
     {
+      "module": "lib/views/app__dashboard__spaceSlug__consumables__poolId__page",
+      "name": "loadConsumablePoolView",
+      "id": "app__dashboard__spaceSlug__consumables__poolId__page:loadConsumablePoolView"
+    },
+    {
       "module": "lib/views/app__dashboard__spaceSlug__integrations__page",
       "name": "loadIntegrationsView",
       "id": "app__dashboard__spaceSlug__integrations__page:loadIntegrationsView"
@@ -64,6 +69,16 @@
       "module": "lib/views/app__dashboard__spaceSlug__machine-settings__page",
       "name": "loadMachineSettingsView",
       "id": "app__dashboard__spaceSlug__machine-settings__page:loadMachineSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__spaceSlug__machine-settings__types__typeSlug__page",
+      "name": "loadMachineTypeView",
+      "id": "app__dashboard__spaceSlug__machine-settings__types__typeSlug__page:loadMachineTypeView"
+    },
+    {
+      "module": "lib/views/app__dashboard__spaceSlug__machines__machineSlug__page",
+      "name": "loadMachineView",
+      "id": "app__dashboard__spaceSlug__machines__machineSlug__page:loadMachineView"
     },
     {
       "module": "lib/views/app__dashboard__spaceSlug__machines__page",
@@ -124,6 +139,16 @@
       "module": "lib/views/app__s__spaceSlug__layout",
       "name": "loadPublicSpaceLayout",
       "id": "app__s__spaceSlug__layout:loadPublicSpaceLayout"
+    },
+    {
+      "module": "lib/views/app__s__spaceSlug__machines__machineSlug__page",
+      "name": "loadPublicMachineView",
+      "id": "app__s__spaceSlug__machines__machineSlug__page:loadPublicMachineView"
+    },
+    {
+      "module": "lib/views/app__s__spaceSlug__machines__page",
+      "name": "loadPublicMachinesView",
+      "id": "app__s__spaceSlug__machines__page:loadPublicMachinesView"
     },
     {
       "module": "lib/views/app__s__spaceSlug__page",

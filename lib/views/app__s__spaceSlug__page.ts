@@ -1,10 +1,10 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { loadPublicSpace } from "@/lib/publicSpace";
+import { loadPublicSpace, spaceShowsMachines } from "@/lib/publicSpace";
 
 /**
  * The public page: what the space is, how to reach it, and the visitor's own place in it (join, waiting,
- * already in). Machines join this page in the next release.
+ * already in), with a link to its public machine catalogue when visible.
  */
 export async function loadPublicSpacePage({ params }: { params: Promise<{ spaceSlug: string }> }) {
   const { spaceSlug } = await params;
@@ -20,6 +20,7 @@ export async function loadPublicSpacePage({ params }: { params: Promise<{ spaceS
   return {
     space,
     takingMakers: space.status === "ACTIVE",
+    machinesVisible: spaceShowsMachines(space),
     viewer: { signedIn: Boolean(userId), emailVerified: Boolean(user?.emailVerified), role: membership?.role ?? null, status: membership?.status ?? null },
   };
 }

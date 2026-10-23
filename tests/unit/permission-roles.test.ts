@@ -26,7 +26,7 @@ describe("space roles and capabilities", () => {
   });
 
   it("lets every staff role read, and makers hold no staff capability", () => {
-    for (const capability of ["space.view", "machines.view", "jobs.view", "maintenance.view"] as const) expect(holders(capability)).toEqual([...STAFF_ROLES]);
+    for (const capability of ["space.view", "machines.view", "consumables.view", "jobs.view", "maintenance.view"] as const) expect(holders(capability)).toEqual([...STAFF_ROLES]);
     for (const capability of Object.keys(CAPABILITIES) as Capability[]) expect(can("MEMBER", capability)).toBe(false);
     expect(can(null, "space.view")).toBe(false);
     expect(isStaffRole("MEMBER")).toBe(false);

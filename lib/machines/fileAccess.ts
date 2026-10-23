@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { can, isStaffRole, spaceAllows } from "@/lib/permissionRoles";
 import { parseMachineFileKey } from "@/lib/storage/machineFiles";
+import { spaceShowsMachines } from "@/lib/publicSpace";
 
 /** The app URL a machine photo or document is served from (always through the access check below). */
 export function machineFileUrl(storageKey: string) {
@@ -10,11 +11,11 @@ export function machineFileUrl(storageKey: string) {
 }
 
 /** What a public page may show: an active space's public, in-service machine (and only its public documents). */
-function publiclyVisible(machine: { isPublic: boolean; retiredAt: Date | null; space: { status: string } }, documentPublic: boolean) {
-  return machine.isPublic && machine.retiredAt === null && machine.space.status === "ACTIVE" && documentPublic;
+function publiclyVisible(machine: { isPublic: boolean; retiredAt: Date | null; space: { status: string; visibility: string } }, documentPublic: boolean) {
+  return machine.isPublic && machine.retiredAt === null && spaceShowsMachines(machine.space) && documentPublic;
 }
 
-const MACHINE_SELECT = { isPublic: true, retiredAt: true, space: { select: { status: true } } } as const;
+const MACHINE_SELECT = { isPublic: true, retiredAt: true, space: { select: { status: true, visibility: true } } } as const;
 
 /**
  * Who may fetch a stored machine file: anyone for a photo or public document of a publicly listed machine,

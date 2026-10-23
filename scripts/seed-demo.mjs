@@ -83,5 +83,18 @@ for (const { team, reviews, ...data } of spaces) {
   }
 }
 
+// Older demo installs predate the Machines UI. Keep its public journey available on every seed run.
+const tinkerspace = await prisma.space.update({
+  where: { slug: "tinkerspace" }, data: { status: "ACTIVE", visibility: "PUBLIC" },
+});
+await prisma.machineType.upsert({
+  where: { spaceId_slug: { spaceId: tinkerspace.id, slug: "workshop-equipment" } },
+  create: {
+    spaceId: tinkerspace.id, slug: "workshop-equipment", name: "Workshop equipment", icon: "wrench",
+    filePolicy: { extensions: ["pdf", "txt"], maxBytes: 20 * 1024 * 1024, maxFiles: 5, required: false },
+  },
+  update: { archivedAt: null },
+});
+
 await prisma.$disconnect();
 console.log(`seed-demo: ${spaces.length} spaces and 6 accounts (admin, owner, machines, viewer, maker, applicant @demo.test) ready.`);

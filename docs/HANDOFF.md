@@ -47,8 +47,9 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
   (branch protection + `.github/CODEOWNERS`). Branch from `dev`, open PRs into `dev`.
 - Work in phases; each phase ends with lint, typecheck and tests green, a commit and a push to `dev`.
 - `CLAUDE.md` and `AGENTS.md` are byte-identical; edit one, copy it over the other.
-- The original build was done by Claude Code sessions (no Codex). Any coding agent can continue from
-  this file plus `CLAUDE.md`.
+- Phases 1 and the Phase 2 domain were built by Claude Code sessions. From Phase 2's UI onwards the owner asked
+  for Codex: Codex implements each step, Claude writes the prompts, verifies every step, runs the gates and the
+  review. Any coding agent can continue from this file plus `CLAUDE.md`.
 
 ## Machines-specific decisions
 
@@ -63,21 +64,32 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
 
 ## Status (2026-10-23)
 
-**Done and committed on `dev`:** Phase 1, Foundation. The Organization platform is forked, Space tenancy,
-roles, magic link, and the BullMQ worker and beat are in place.
+**Done and committed on `dev` (local commits; pushing is the owner's call):**
+- Phase 1, Foundation. The Organization platform is forked, Space tenancy, roles, magic link, and the BullMQ
+  worker and beat are in place.
+- Phase 2, Machines. Domain (types, machines, consumables, files, webhooks) plus the UI: staff machine catalogue
+  and machine page (details, specs from the type's fields, status, retire, flags, photos, documents), machine
+  settings (type list, new/duplicate/archive/reorder, type editor for every section incl. spec and request field
+  definitions), consumables (pools, restock, correction, retire, public toggle, ledger, low-stock alerts), public
+  machine pages `/s/[spaceSlug]/machines` and `/s/[spaceSlug]/machines/[machineSlug]` with public photos and
+  documents. New capability `consumables.view` (all staff). The `0002_machines_domain` migration matches the
+  schema (no drift).
 
-**Last commit, work in progress (`wip:`):** Phase 2, Machines. It adds machine types, machines,
-consumables, machine files, space job settings, the spaces API, webhooks and `lib/machines`/`lib/consumables`
-with their Prisma schema changes. Typecheck is clean and all 345 unit tests pass. No migration has been generated for the schema changes yet;
-run `npm run db:migrate` to create it.
+**How it was verified:** lint, typecheck, unit (420), integration (95, PostgreSQL), `build`, `build:jobs`,
+frontend typecheck and build, `frontend:catalog --check`, `prisma migrate diff` (no drift), and the production
+browser suites `test:e2e:vps` and `test:e2e:split` (14 tests each, signed-in journeys included). Those two
+scripts accept `--external-services` (use DATABASE_URL, REDIS_URL and optional S3_* from the environment instead
+of starting containers) and seed the demo when DEMO_PASSWORD is set. On Windows run them inside a Linux
+container: their server commands use POSIX syntax.
 
 ## What is left
 
-Phases 2 (finish) to 6 from `docs/plans/2026-10-23-machines-build.md`:
-2. Finish Machines: migration, admin UI, public machine pages, photos, tests.
+Phases 3 to 6 from `docs/plans/2026-10-23-machines-build.md`:
 3. Jobs: uploads validated by file policy, queue and position, review and lifecycle, pricing engine,
-   Razorpay/Stripe/offline/pay-later payments and refunds, consumable deduction, notifications.
-4. Upkeep: metering, maintenance schedules, downtime, fault reports, warranty, service history, reports.
+   Razorpay/Stripe/offline/pay-later payments and refunds, consumable deduction, notifications, and the usage
+   writer (`lib/usage/record.ts`, moved here from Phase 4 because job completion writes usage).
+4. Upkeep: maintenance schedules on top of the Phase 3 meters, downtime, fault reports, warranty, service
+   history, reports.
 5. Integrations: printer adapter layer, REST API with API keys, webhooks, audit log views.
 6. Ship: README with real screenshots, one-line VPS install and Render deploy verified, e2e journeys,
    design polish, and an independent review. Then open the `dev → main` PR for the owner.

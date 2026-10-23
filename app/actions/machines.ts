@@ -7,6 +7,7 @@ import { isCurrencyCode, parseAmount } from "@/lib/money/currencies";
 import { changeMachineStatus, createMachine, MachineInputError, MachineNotFoundError, setMachineFlags, setMachineRetired, updateMachine, type MachineDetails } from "@/lib/machines/machines";
 import { createMachineSchema, machineDetailsSchema, machineStatusSchema } from "@/lib/machines/schemas";
 import { enqueueWebhookDeliveries } from "@/lib/webhooks/emit";
+import { TypeNotFoundError } from "@/lib/machines/types";
 import type { ActionResult } from "./space";
 
 const NOT_FOUND = { ok: false as const, error: "Machine not found." };
@@ -14,6 +15,7 @@ const machineId = z.string().trim().min(1).max(64);
 
 function failure(error: unknown): Failure {
   if (error instanceof MachineNotFoundError) return NOT_FOUND;
+  if (error instanceof TypeNotFoundError) return { ok: false, error: error.message };
   if (error instanceof MachineInputError) return { ok: false, error: error.fieldErrors._root?.[0] ?? error.message, fieldErrors: error.fieldErrors };
   throw error;
 }

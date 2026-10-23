@@ -22,13 +22,13 @@ export const SPACE_NAV: Array<{ path: string; label: string; capabilities: Capab
   { path: "/machines", label: "Machines", capabilities: ["machines.view"] },
   { path: "/jobs", label: "Jobs", capabilities: ["jobs.view"] },
   { path: "/maintenance", label: "Maintenance", capabilities: ["maintenance.view"] },
-  { path: "/consumables", label: "Consumables", capabilities: ["machines.view"] },
+  { path: "/consumables", label: "Consumables", capabilities: ["consumables.view"] },
   { path: "/payments", label: "Payments", capabilities: ["payments.view"] },
   { path: "/reports", label: "Reports", capabilities: ["reports.view"] },
   { path: "/integrations", label: "Integrations", capabilities: ["integrations.manage", "printers.manage"] },
   { path: "/team", label: "Team", capabilities: ["space.view"] },
   { path: "/settings", label: "Space settings", capabilities: ["space.settings"] },
-  { path: "/machine-settings", label: "Machine settings", capabilities: ["machine.settings"] },
+  { path: "/machine-settings", label: "Machine settings", capabilities: ["machines.view"] },
 ];
 
 function NavItem({ href, children, active, onNavigate, badge }: { href: string; children: string; active: boolean; onNavigate?: () => void; badge?: ReactNode }) {

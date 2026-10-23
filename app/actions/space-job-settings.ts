@@ -21,5 +21,6 @@ export async function setLowStockAlerts(input: unknown): Promise<ActionResult> {
     await recordSettingsChange({ spaceId: access.space.id, actorUserId: access.userId, area: "space.notifications", before, after: parsed.data, client: tx });
   });
   revalidate(`/dashboard/${access.space.slug}/settings/notifications`);
+  revalidate(`/dashboard/${access.space.slug}/consumables`, "layout");
   return { ok: true };
 }

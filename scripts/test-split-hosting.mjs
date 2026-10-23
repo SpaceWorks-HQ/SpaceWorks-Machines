@@ -27,6 +27,10 @@ if (process.argv[2] === "serve-frontend") {
     throw new Error("External test services require DATABASE_URL and REDIS_URL.");
   }
   // With DEMO_PASSWORD set, the disposable database gets the demo seed so signed-in journeys run.
+  // External services may include disposable S3-compatible storage, so upload journeys run too.
+  const storage = externalServices && process.env.S3_ENDPOINT
+    ? Object.fromEntries(["S3_BUCKET", "S3_REGION", "S3_ENDPOINT", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "S3_FORCE_PATH_STYLE"].filter((name) => process.env[name]).map((name) => [name, process.env[name]]))
+    : {};
   const demo = process.env.DEMO_PASSWORD ? { DEMO_PASSWORD: process.env.DEMO_PASSWORD, DEMO_MFA_SECRET: process.env.DEMO_MFA_SECRET ?? "" } : {};
   const freePort = () => new Promise((resolve, reject) => {
     const server = createServer(); server.on("error", reject);
@@ -47,7 +51,7 @@ if (process.argv[2] === "serve-frontend") {
     HEALTHCHECK_SECRET: hex(), CRON_SECRET: hex(), SUPER_ADMIN_EMAIL: "admin@example.test",
     TRUSTED_PROXY_IP_HEADER: "x-real-ip", FRONTEND_TRUSTED_IP_HEADER: "x-real-ip",
     EMAIL_FROM: "Test <test@example.test>", SMTP_HOST: "127.0.0.1", SMTP_PORT: "9", SMTP_USER: "disposable", SMTP_PASSWORD: hex(),
-    S3_BUCKET: "disposable-test", S3_REGION: "us-east-1",
+    S3_BUCKET: "disposable-test", S3_REGION: "us-east-1", ...storage,
     PLAYWRIGHT_SPLIT: monolith ? "0" : "1", PLAYWRIGHT_PORT: "3100", PLAYWRIGHT_TRUSTED_IP_HEADER: "x-real-ip",
     PLAYWRIGHT_SERVER_COMMAND: monolith ? "PORT=3100 HOSTNAME=127.0.0.1 node .next/standalone/server.js" : "node scripts/test-split-hosting.mjs serve-frontend",
   };

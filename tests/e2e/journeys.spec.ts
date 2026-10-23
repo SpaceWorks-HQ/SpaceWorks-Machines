@@ -128,7 +128,7 @@ test("a maker signs in with an emailed link and asks to join, and the owner appr
   await signInWithPassword(ownerPage, owner.email, ownerSecret);
   await ownerPage.goto(`/dashboard/${slug}/team`);
   await ownerPage.getByRole("button", { name: `Approve ${maker.name}` }).click();
-  await expect(ownerPage.getByText("Waiting for approval · 1")).toBeHidden();
+  await expect(ownerPage.getByText("Waiting for approval · 1")).toHaveCount(0);
 
   await makerPage.reload();
   await expect(makerPage.getByText("You're a maker at Kochi Makers")).toBeVisible();

@@ -47,13 +47,16 @@ test("a machine manager gets machine settings but is sent back from space settin
   await expect(page).toHaveURL(/\/dashboard\/tinkerspace$/);
 });
 
-test("a viewer reads reports but is never offered settings", async ({ page }) => {
+test("a viewer reads machine settings without edit controls", async ({ page }) => {
   await signIn(page, "viewer@demo.test");
   await page.goto("/dashboard/tinkerspace");
   await expect(nav(page).getByRole("link", { name: "Reports" })).toBeVisible();
-  await expect(nav(page).getByRole("link", { name: /settings/ })).toHaveCount(0);
+  await expect(nav(page).getByRole("link", { name: "Space settings" })).toHaveCount(0);
+  await expect(nav(page).getByRole("link", { name: "Machine settings" })).toBeVisible();
   await page.goto("/dashboard/tinkerspace/machine-settings");
-  await expect(page).toHaveURL(/\/dashboard\/tinkerspace$/);
+  await expect(page.getByRole("heading", { name: "Machine settings", level: 1 })).toBeVisible();
+  await expect(page.getByRole("button", { name: "New type" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Archive type", exact: true })).toHaveCount(0);
 });
 
 test("a maker sees their spaces but not the staff dashboard", async ({ page }) => {

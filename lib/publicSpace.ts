@@ -4,6 +4,17 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 
+/** Unlisted spaces have public pages by direct link, but are never indexed. */
+export function spaceShowsMachines(space: { status: string; visibility: string }) {
+  return space.status === "ACTIVE" && (space.visibility === "PUBLIC" || space.visibility === "UNLISTED");
+}
+
+export const loadPublicMachineSpace = cache(async (slug: string) => {
+  const space = await loadPublicSpace(slug);
+  if (!spaceShowsMachines(space)) notFound();
+  return { slug: space.slug, name: space.name, id: space.id, visibility: space.visibility };
+});
+
 /**
  * The space behind a public page. Active and suspended spaces have one (a suspended one says it isn't
  * taking makers); applications, refusals and archived spaces don't.

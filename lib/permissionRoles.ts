@@ -28,6 +28,7 @@ export const CAPABILITIES = {
   "jobs.view": ALL_STAFF,
   "jobs.review": [...MACHINE_MANAGERS, "OPERATOR"],
   "jobs.operate": [...MACHINE_MANAGERS, "OPERATOR"],
+  "consumables.view": ALL_STAFF,
   "consumables.manage": [...MACHINE_MANAGERS, "OPERATOR"],
   "maintenance.view": ALL_STAFF,
   "maintenance.manage": [...MACHINE_MANAGERS, "TECHNICIAN"],
@@ -53,7 +54,7 @@ export function isStaffRole(role: SpaceRole | null | undefined): role is StaffRo
  * Capabilities a suspended or archived space keeps: reading what is there and settling money already
  * received. Everything else waits until the space is active again.
  */
-export const SUSPENDED_CAPABILITIES: ReadonlySet<Capability> = new Set<Capability>(["space.view", "machines.view", "jobs.view", "maintenance.view", "payments.view", "payments.manage", "reports.view", "audit.view"]);
+export const SUSPENDED_CAPABILITIES: ReadonlySet<Capability> = new Set<Capability>(["space.view", "machines.view", "consumables.view", "jobs.view", "maintenance.view", "payments.view", "payments.manage", "reports.view", "audit.view"]);
 
 /** Whether a space in this status may use a capability at all. Before approval: none. */
 export function spaceAllows(status: SpaceStatus, capability: Capability): boolean {

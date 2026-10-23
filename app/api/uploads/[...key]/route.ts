@@ -10,7 +10,7 @@ type Context = { params: Promise<{ key: string[] }> };
 const missingHeaders = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 const notFound = () => new NextResponse("Not Found", { status: 404, headers: missingHeaders });
 
-/** Machine photos and documents: checked per request, never cached by shared caches unless the file is public. */
+/** Check every request: visibility can be revoked, even for a previously public machine file. */
 async function machineFile(key: string) {
   const session = await auth();
   const access = await resolveMachineFile(key, session?.user?.id ?? null);
@@ -26,7 +26,7 @@ async function machineFile(key: string) {
       "Content-Security-Policy": "sandbox; default-src 'none'; img-src 'self'",
       "Cross-Origin-Resource-Policy": "same-site",
       "X-Content-Type-Options": "nosniff",
-      "Cache-Control": access.public ? "public, max-age=300" : "private, no-store",
+      "Cache-Control": "private, no-store",
     },
   });
 }

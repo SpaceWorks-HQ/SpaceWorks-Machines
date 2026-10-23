@@ -4,7 +4,7 @@ import type { MachineStatus, Prisma } from "@prisma/client";
 import { recordAuditEvent } from "@/lib/audit";
 import { emitWebhook } from "@/lib/webhooks/emit";
 import { readFields, validateSpecs } from "./fields";
-import { freeSlug } from "./types";
+import { freeSlug, TypeNotFoundError } from "./types";
 
 export class MachineNotFoundError extends Error {
   constructor() {
@@ -38,8 +38,9 @@ function specErrors(errors: Record<string, string>) {
 
 /** A machine of one type (fixed from now on). Specs are checked against the type's spec fields. */
 export async function createMachine(tx: Prisma.TransactionClient, input: MachineDetails & { spaceId: string; actorId: string; typeId: string; isPublic: boolean; acceptsJobs: boolean }) {
-  const type = await tx.machineType.findFirst({ where: { id: input.typeId, spaceId: input.spaceId, archivedAt: null }, select: { id: true, specFields: true } });
-  if (!type) throw new MachineInputError({ typeId: ["Choose a machine type"] });
+  const type = await tx.machineType.findFirst({ where: { id: input.typeId, spaceId: input.spaceId }, select: { id: true, specFields: true, archivedAt: true } });
+  if (!type) throw new TypeNotFoundError();
+  if (type.archivedAt) throw new MachineInputError({ typeId: ["Choose a machine type"] });
   const specs = validateSpecs(readFields(type.specFields), input.specs);
   if (!specs.ok) throw new MachineInputError(specErrors(specs.errors));
   const slug = await freeSlug(tx, "machine", input.spaceId, input.name);
@@ -78,8 +79,8 @@ export async function updateMachine(tx: Prisma.TransactionClient, input: Machine
 }
 
 async function lockMachine(tx: Prisma.TransactionClient, spaceId: string, machineId: string) {
-  const rows = await tx.$queryRaw<Array<{ id: string; status: MachineStatus; retiredAt: Date | null }>>`
-    SELECT "id", "status", "retiredAt" FROM "Machine" WHERE "id" = ${machineId} AND "spaceId" = ${spaceId} FOR UPDATE`;
+  const rows = await tx.$queryRaw<Array<{ id: string; status: MachineStatus; statusNote: string; retiredAt: Date | null }>>`
+    SELECT "id", "status", "statusNote", "retiredAt" FROM "Machine" WHERE "id" = ${machineId} AND "spaceId" = ${spaceId} FOR UPDATE`;
   if (!rows[0]) throw new MachineNotFoundError();
   return rows[0];
 }
@@ -89,7 +90,10 @@ export async function changeMachineStatus(tx: Prisma.TransactionClient, input: {
   const machine = await lockMachine(tx, input.spaceId, input.machineId);
   if (machine.retiredAt) throw new MachineInputError({ status: ["A retired machine stays offline. Bring it back into service first."] });
   if (machine.status === input.status) {
-    await tx.machine.update({ where: { spaceId_id: { spaceId: input.spaceId, id: machine.id } }, data: { statusNote: input.note } });
+    if (machine.statusNote !== input.note) {
+      await tx.machine.update({ where: { spaceId_id: { spaceId: input.spaceId, id: machine.id } }, data: { statusNote: input.note } });
+      await recordAuditEvent({ action: "machine.updated", actorUserId: input.actorId, spaceId: input.spaceId, targetType: "Machine", targetId: machine.id, client: tx });
+    }
     return { changed: false, webhookDeliveryIds: [] as string[] };
   }
   await tx.machine.update({ where: { spaceId_id: { spaceId: input.spaceId, id: machine.id } }, data: { status: input.status, statusNote: input.note } });
