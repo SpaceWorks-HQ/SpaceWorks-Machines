@@ -89,18 +89,23 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
   sweeps (`maintenance-due`, `warranty-expiry`), per-machine service history, and reports (`lib/reports`:
   jobs, utilisation with availability/MTBF/MTTR, consumables, revenue per currency, maintenance, warranty)
   with CSV export. Upkeep files share the private machine-file store and are staff-only.
+- Phase 5, Integrations: REST API `/api/v1` with per-space API keys and scopes (`lib/apiKeys.ts`,
+  `lib/api/handler.ts`, OpenAPI at `/api/v1/openapi.json`, `docs/API.md`), signed outbound webhooks with SQL-
+  scheduled retries, auto switch-off after 10 failures, delivery log, test and redeliver (`lib/webhooks`, beat
+  `webhook-relay`), the printer adapter layer (`lib/printers`: manual and simulated working; OctoPrint,
+  Moonraker, Bambu and PrusaLink stubs shown as "Coming soon"; beat `printer-poll` finishes jobs from
+  telemetry), and the audit log page with CSV export.
 
-**How it was verified:** lint, typecheck, unit (546), integration (463, PostgreSQL), `build`, `build:jobs`,
+**How it was verified:** lint, typecheck, unit (557), integration (471, PostgreSQL), `build`, `build:jobs`,
 frontend typecheck and build, `frontend:catalog --check`, `prisma migrate diff` (no drift), and the production
-browser suites `test:e2e:vps` and `test:e2e:split` (16 tests each, signed-in journeys included). Those two
+browser suites `test:e2e:vps` and `test:e2e:split` (17 tests each, signed-in journeys included). Those two
 scripts accept `--external-services` (use DATABASE_URL, REDIS_URL and optional S3_* from the environment instead
 of starting containers) and seed the demo when DEMO_PASSWORD is set. On Windows run them inside a Linux
 container: their server commands use POSIX syntax.
 
 ## What is left
 
-Phases 5 and 6 from `docs/plans/2026-10-23-machines-build.md`:
-5. Integrations: printer adapter layer, REST API with API keys, webhooks, audit log views.
+Phase 6 from `docs/plans/2026-10-23-machines-build.md`:
 6. Ship: README with real screenshots, one-line VPS install and Render deploy verified, e2e journeys,
    design polish, and an independent review. Then open the `dev → main` PR for the owner.
 
@@ -110,6 +115,11 @@ Decisions taken conservatively while building without the owner; change them if 
 - Reports use UTC calendar days for their date range, not the space's time zone.
 - Revenue figures in reports need `payments.view` as well as `reports.view`.
 - A fault's reporter can add photos only within a day of reporting; makers can't see fault photos afterwards.
+- API writes act as the key's creator and need their current permission; there is no separate service account.
+- Webhook hosts are checked against private addresses when saved and before each send, without DNS pinning
+  between the check and the request (the same as chat alerts).
+- Printer connections allow only public hosts for future network adapters; LAN printers would need an
+  explicit instance setting.
 - Overdue schedules with "take out of service" only block a machine that is idle or reserved, never a running job.
 
 ## Run it locally

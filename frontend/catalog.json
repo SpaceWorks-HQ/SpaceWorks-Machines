@@ -46,6 +46,11 @@
       "id": "app__dashboard__spaceSlug__application__page:loadSpaceApplicationView"
     },
     {
+      "module": "lib/views/app__dashboard__spaceSlug__audit__page",
+      "name": "loadAuditView",
+      "id": "app__dashboard__spaceSlug__audit__page:loadAuditView"
+    },
+    {
       "module": "lib/views/app__dashboard__spaceSlug__consumables__page",
       "name": "loadConsumablesView",
       "id": "app__dashboard__spaceSlug__consumables__page:loadConsumablesView"
@@ -59,6 +64,11 @@
       "module": "lib/views/app__dashboard__spaceSlug__integrations__page",
       "name": "loadIntegrationsView",
       "id": "app__dashboard__spaceSlug__integrations__page:loadIntegrationsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__spaceSlug__integrations__webhooks__endpointId__page",
+      "name": "loadWebhookDeliveriesView",
+      "id": "app__dashboard__spaceSlug__integrations__webhooks__endpointId__page:loadWebhookDeliveriesView"
     },
     {
       "module": "lib/views/app__dashboard__spaceSlug__jobs__number__page",
@@ -91,6 +101,11 @@
       "id": "app__dashboard__spaceSlug__machine-settings__pricing__page:loadPricingRulesView"
     },
     {
+      "module": "lib/views/app__dashboard__spaceSlug__machine-settings__printers__page",
+      "name": "loadPrintersView",
+      "id": "app__dashboard__spaceSlug__machine-settings__printers__page:loadPrintersView"
+    },
+    {
       "module": "lib/views/app__dashboard__spaceSlug__machine-settings__types__typeSlug__page",
       "name": "loadMachineTypeView",
       "id": "app__dashboard__spaceSlug__machine-settings__types__typeSlug__page:loadMachineTypeView"
@@ -99,6 +114,11 @@
       "module": "lib/views/app__dashboard__spaceSlug__machines__machineSlug__page",
       "name": "loadMachineView",
       "id": "app__dashboard__spaceSlug__machines__machineSlug__page:loadMachineView"
+    },
+    {
+      "module": "lib/views/app__dashboard__spaceSlug__machines__machineSlug__printer__page",
+      "name": "loadMachinePrinterView",
+      "id": "app__dashboard__spaceSlug__machines__machineSlug__printer__page:loadMachinePrinterView"
     },
     {
       "module": "lib/views/app__dashboard__spaceSlug__machines__machineSlug__upkeep__page",
@@ -416,6 +436,56 @@
       "module": "app/actions/instance",
       "name": "recordBackupRestoreVerification",
       "id": "instance:recordBackupRestoreVerification"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "createApiKeyAction",
+      "id": "integrations:createApiKeyAction"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "revokeApiKeyAction",
+      "id": "integrations:revokeApiKeyAction"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "createWebhookAction",
+      "id": "integrations:createWebhookAction"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "updateWebhookAction",
+      "id": "integrations:updateWebhookAction"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "rotateWebhookSecretAction",
+      "id": "integrations:rotateWebhookSecretAction"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "deleteWebhookAction",
+      "id": "integrations:deleteWebhookAction"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "testWebhookAction",
+      "id": "integrations:testWebhookAction"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "redeliverWebhookAction",
+      "id": "integrations:redeliverWebhookAction"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "savePrinterAction",
+      "id": "integrations:savePrinterAction"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "printerCommandAction",
+      "id": "integrations:printerCommandAction"
     },
     {
       "module": "app/actions/invite-acceptance",

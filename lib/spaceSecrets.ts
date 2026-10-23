@@ -4,11 +4,11 @@ import crypto from "crypto";
 import { PaymentSecretsUnavailable } from "@/lib/payments/secrets";
 
 /**
- * Space secrets other than gateway keys (SMTP passwords, chat webhooks and tokens), encrypted with the
+ * Space secrets other than gateway keys (SMTP passwords, chat tokens, webhook signing secrets, printer keys), encrypted with the
  * same PAYMENT_SECRETS_KEY but a key derived per purpose, and bound to the space, so a ciphertext copied
  * to another tenant or another purpose will not decrypt.
  */
-export type SpaceSecretPurpose = "email" | "chat";
+export type SpaceSecretPurpose = "email" | "chat" | "webhook" | "printer";
 
 function key(purpose: SpaceSecretPurpose) {
   const raw = process.env.PAYMENT_SECRETS_KEY ?? "";

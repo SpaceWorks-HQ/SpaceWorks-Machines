@@ -10,6 +10,7 @@ import { asMemberNoticePayload, deliverMemberNotice } from "@/lib/email/members"
 import { asLowStockPayload, deliverLowStockAlert } from "@/lib/email/consumables";
 import { asJobEmailPayload, deliverJobEmail } from "@/lib/email/jobs";
 import { asUpkeepEmailPayload, deliverUpkeepEmail } from "@/lib/email/upkeep";
+import { asEndpointPayload, deliverEndpointDisabled } from "@/lib/email/integrations";
 import { asLoginAlertPayload, asLoginCodePayload, deliverLoginAlert, deliverLoginCode } from "@/lib/email/loginSecurity";
 
 /** What a handler reports after a delivery attempt. Throw to retry; throw PermanentOutboxError to give up. */
@@ -155,6 +156,15 @@ const upkeepStaff: OutboxKindHandler = {
   },
 };
 
+const webhookDisabled: OutboxKindHandler = {
+  capability: false,
+  async deliver(value, messageId) {
+    const payload = asEndpointPayload(value);
+    if (!payload) throw new PermanentOutboxError();
+    return deliverEndpointDisabled(payload, messageId);
+  },
+};
+
 /** Every email the platform can send. Add a kind here when a feature needs a new message. */
 export const OUTBOX_KINDS = {
   "password-reset": passwordReset,
@@ -171,6 +181,7 @@ export const OUTBOX_KINDS = {
   "job-requester": jobEmail(false),
   "job-staff": jobEmail(true),
   "upkeep-staff": upkeepStaff,
+  "webhook-disabled": webhookDisabled,
 } satisfies Record<string, OutboxKindHandler>;
 
 export type OutboxKind = keyof typeof OUTBOX_KINDS;

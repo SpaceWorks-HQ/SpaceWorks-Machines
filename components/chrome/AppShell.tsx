@@ -26,6 +26,7 @@ export const SPACE_NAV: Array<{ path: string; label: string; capabilities: Capab
   { path: "/payments", label: "Payments", capabilities: ["payments.view"] },
   { path: "/reports", label: "Reports", capabilities: ["reports.view"] },
   { path: "/integrations", label: "Integrations", capabilities: ["integrations.manage", "printers.manage"] },
+  { path: "/audit", label: "Audit log", capabilities: ["audit.view"] },
   { path: "/team", label: "Team", capabilities: ["space.view"] },
   { path: "/settings", label: "Space settings", capabilities: ["space.settings"] },
   { path: "/machine-settings", label: "Machine settings", capabilities: ["machines.view"] },

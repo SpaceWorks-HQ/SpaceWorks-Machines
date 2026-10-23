@@ -7,6 +7,7 @@ import { transitionJob } from "@/lib/jobs";
 import { transitionSchema } from "@/lib/jobs/actionSchemas";
 import { jobFailure, refreshJobs, requesterAction, submitAction } from "@/lib/jobs/actionSupport";
 import type { ActionResult } from "./space";
+import { printerDependencies } from "@/lib/printers/jobs";
 
 export async function submitJobAction(input: unknown) { return submitAction(input); }
 export async function createJobOnBehalfAction(input: unknown) {
@@ -33,7 +34,7 @@ export async function transitionJobAction(input: unknown): Promise<ActionResult<
     if (!staff.ok) return staff;
   }
   try {
-    const result = await transitionJob({ spaceId: access.space.id, actorId: access.userId, jobId }, command);
+    const result = await transitionJob({ spaceId: access.space.id, actorId: access.userId, jobId }, command, printerDependencies);
     refreshJobs(access.space.slug);
     return { ok: true, data: { number: result.job.number, warnings: result.warnings } };
   } catch (error) { return jobFailure(error); }

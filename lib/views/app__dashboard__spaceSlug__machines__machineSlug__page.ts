@@ -26,6 +26,7 @@ export async function loadMachineView({ params }: { params: Promise<{ spaceSlug:
     space: { ...space, ...profile },
     canManage: can(membership.role, "machines.manage") && spaceAllows(space.status, "machines.manage"),
     canChangeStatus: can(membership.role, "machines.status") && spaceAllows(space.status, "machines.status"),
+    canPrinters: can(membership.role, "printers.manage") && spaceAllows(space.status, "printers.manage"),
     type: { id: row.type.id, name: row.type.name, icon: row.type.icon, archived: row.type.archivedAt !== null,
       specFields, materials: row.type.materials, colours: row.type.colours },
     machine: {

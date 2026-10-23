@@ -26,6 +26,7 @@ export default async function MachinePage({ params }: { params: Promise<{ spaceS
       <SpacePageHeader space={space} title={machine.name} description={`${type.name}${type.archived ? " · Archived type" : ""}${details.location ? ` · ${details.location}` : ""}`}
         actions={<><MachineStatusChip status={machine.status} />{machine.retired ? <Chip>Retired</Chip> : null}
           <Button asChild size="sm" variant="secondary"><Link href={`/dashboard/${space.slug}/machines/${machine.slug}/upkeep`}>Upkeep</Link></Button>
+          {view.canPrinters ? <Button asChild size="sm" variant="secondary"><Link href={`/dashboard/${space.slug}/machines/${machine.slug}/printer`}>Printer</Link></Button> : null}
           {view.canChangeStatus && !machine.retired ? <MachineStatusDialog {...context} status={machine.status} note={machine.statusNote} /> : null}
           {canManage ? <MachineRetireButton {...context} name={machine.name} retired={machine.retired} /> : null}</>} />
       {machine.statusNote ? <Callout title="Status note"><p className="whitespace-pre-wrap break-words">{machine.statusNote}</p></Callout> : null}
