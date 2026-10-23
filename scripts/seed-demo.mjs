@@ -119,5 +119,17 @@ if (!await prisma.pricingRule.findFirst({ where: { spaceId: tinkerspace.id, type
   await prisma.pricingRule.create({ data: { spaceId: tinkerspace.id, typeId: jobType.id, mode: "FLAT", flatFee: 5000, paymentTiming: "ON_COMPLETION" } });
 }
 
+// Upkeep: a public machine with a weekly inspection that is already due, so the maintenance views have work.
+const workshopType = await prisma.machineType.findUniqueOrThrow({ where: { spaceId_slug: { spaceId: tinkerspace.id, slug: "workshop-equipment" } } });
+const drill = await prisma.machine.upsert({
+  where: { spaceId_slug: { spaceId: tinkerspace.id, slug: "demo-drill-press" } },
+  create: { spaceId: tinkerspace.id, typeId: workshopType.id, slug: "demo-drill-press", name: "Demo drill press", isPublic: true, acceptsJobs: false },
+  update: { retiredAt: null, isPublic: true },
+});
+if (!await prisma.maintenanceSchedule.findFirst({ where: { spaceId: tinkerspace.id, machineId: drill.id, title: "Weekly inspection" } })) {
+  await prisma.maintenanceSchedule.create({ data: { spaceId: tinkerspace.id, machineId: drill.id, title: "Weekly inspection", trigger: "TIME", intervalDays: 7,
+    nextDueAt: new Date(Date.now() - 86_400_000), checklist: ["Check the chuck", "Clean the table"], createdById: machines.id } });
+}
+
 await prisma.$disconnect();
 console.log(`seed-demo: ${spaces.length} spaces and 6 accounts (admin, owner, machines, viewer, maker, applicant @demo.test) ready.`);

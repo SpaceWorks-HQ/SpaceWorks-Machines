@@ -101,9 +101,24 @@
       "id": "app__dashboard__spaceSlug__machines__machineSlug__page:loadMachineView"
     },
     {
+      "module": "lib/views/app__dashboard__spaceSlug__machines__machineSlug__upkeep__page",
+      "name": "loadMachineUpkeepView",
+      "id": "app__dashboard__spaceSlug__machines__machineSlug__upkeep__page:loadMachineUpkeepView"
+    },
+    {
       "module": "lib/views/app__dashboard__spaceSlug__machines__page",
       "name": "loadMachinesView",
       "id": "app__dashboard__spaceSlug__machines__page:loadMachinesView"
+    },
+    {
+      "module": "lib/views/app__dashboard__spaceSlug__maintenance__faults__number__page",
+      "name": "loadFaultView",
+      "id": "app__dashboard__spaceSlug__maintenance__faults__number__page:loadFaultView"
+    },
+    {
+      "module": "lib/views/app__dashboard__spaceSlug__maintenance__faults__page",
+      "name": "loadFaultsView",
+      "id": "app__dashboard__spaceSlug__maintenance__faults__page:loadFaultsView"
     },
     {
       "module": "lib/views/app__dashboard__spaceSlug__maintenance__page",
@@ -361,6 +376,11 @@
       "module": "app/actions/consumables",
       "name": "setPoolPublicAction",
       "id": "consumables:setPoolPublicAction"
+    },
+    {
+      "module": "app/actions/faults",
+      "name": "reportFaultAction",
+      "id": "faults:reportFaultAction"
     },
     {
       "module": "app/actions/instance-settings",
@@ -676,6 +696,46 @@
       "module": "app/actions/team",
       "name": "deleteSpace",
       "id": "team:deleteSpace"
+    },
+    {
+      "module": "app/actions/upkeep",
+      "name": "createScheduleAction",
+      "id": "upkeep:createScheduleAction"
+    },
+    {
+      "module": "app/actions/upkeep",
+      "name": "updateScheduleAction",
+      "id": "upkeep:updateScheduleAction"
+    },
+    {
+      "module": "app/actions/upkeep",
+      "name": "logMaintenanceAction",
+      "id": "upkeep:logMaintenanceAction"
+    },
+    {
+      "module": "app/actions/upkeep",
+      "name": "startDowntimeAction",
+      "id": "upkeep:startDowntimeAction"
+    },
+    {
+      "module": "app/actions/upkeep",
+      "name": "endDowntimeAction",
+      "id": "upkeep:endDowntimeAction"
+    },
+    {
+      "module": "app/actions/upkeep",
+      "name": "updateFaultAction",
+      "id": "upkeep:updateFaultAction"
+    },
+    {
+      "module": "app/actions/upkeep",
+      "name": "saveWarrantyAction",
+      "id": "upkeep:saveWarrantyAction"
+    },
+    {
+      "module": "app/actions/upkeep",
+      "name": "logManualUsageAction",
+      "id": "upkeep:logManualUsageAction"
     }
   ]
 }

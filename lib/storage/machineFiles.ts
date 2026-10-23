@@ -5,26 +5,29 @@ import { prisma } from "@/lib/db";
 
 /*
  * Machine photos and documents: private objects, served only by /api/uploads after an access check
- * (lib/machines/fileAccess.ts). Keys are spaces/<spaceId>/machines/<machineId>/(photos|documents)/<uuid>.<ext>.
+ * (lib/machines/fileAccess.ts). Keys are spaces/<spaceId>/machines/<machineId>/<kind>/<uuid>.<ext>; maintenance,
+ * warranty and fault files are staff-only.
  * Same bucket as the other files; without object storage (development only) the bytes live in the Asset table.
  */
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
-const MACHINE_FILE_KEY = new RegExp(`^spaces/([A-Za-z0-9_-]{1,128})/machines/([A-Za-z0-9_-]{1,128})/(photos|documents)/${UUID}\\.(webp|pdf|txt)$`);
+const MACHINE_FILE_KEY = new RegExp(`^spaces/([A-Za-z0-9_-]{1,128})/machines/([A-Za-z0-9_-]{1,128})/(photos|documents|maintenance|warranty|faults)/${UUID}\\.(webp|pdf|txt)$`);
 
 export const MACHINE_FILE_TYPES = { webp: "image/webp", pdf: "application/pdf", txt: "text/plain; charset=utf-8" } as const;
 export type MachineFileExtension = keyof typeof MACHINE_FILE_TYPES;
 
+export type MachineFileKind = "photos" | "documents" | "maintenance" | "warranty" | "faults";
+
 export function parseMachineFileKey(key: string) {
   const match = MACHINE_FILE_KEY.exec(key);
-  return match ? { spaceId: match[1]!, machineId: match[2]!, kind: match[3] as "photos" | "documents", extension: match[4] as MachineFileExtension } : null;
+  return match ? { spaceId: match[1]!, machineId: match[2]!, kind: match[3] as MachineFileKind, extension: match[4] as MachineFileExtension } : null;
 }
 
 export function isMachineFileKey(key: string) {
   return MACHINE_FILE_KEY.test(key);
 }
 
-export function machineFileKey(spaceId: string, machineId: string, kind: "photos" | "documents", extension: MachineFileExtension) {
+export function machineFileKey(spaceId: string, machineId: string, kind: MachineFileKind, extension: MachineFileExtension) {
   return `spaces/${spaceId}/machines/${machineId}/${kind}/${crypto.randomUUID()}.${extension}`;
 }
 

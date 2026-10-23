@@ -24,7 +24,7 @@ export function asChatPayload(value: Prisma.JsonValue): ChatPayload | null {
   if (!p || !isId(p.channelId) || !isId(p.spaceId) || !CHAT_EVENTS.includes(p.event as ChatEvent)) return null;
   const refs = (p.refs && typeof p.refs === "object" && !Array.isArray(p.refs) ? p.refs : {}) as Record<string, unknown>;
   const clean: ChatRefs = {};
-  for (const key of ["memberId", "poolId", "jobId"] as const) if (isId(refs[key])) clean[key] = refs[key] as string;
+  for (const key of ["memberId", "poolId", "jobId", "machineId", "faultId", "scheduleId"] as const) if (isId(refs[key])) clean[key] = refs[key] as string;
   return { channelId: p.channelId, spaceId: p.spaceId, event: p.event as ChatEvent, refs: clean };
 }
 

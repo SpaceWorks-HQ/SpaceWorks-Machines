@@ -3,11 +3,12 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { absoluteUrl } from "@/lib/email/message";
 import type { ChatEvent } from "./events";
+import { upkeepMessage } from "./upkeepMessage";
 import { formatQuantity } from "@/lib/consumables/math";
 import { METERING_UNIT_LABELS } from "@/lib/machines/presets";
 
-/** Ids only, so nothing personal sits in the queue. Later phases add jobId, machineId and so on. */
-export type ChatRefs = { memberId?: string; poolId?: string; jobId?: string };
+/** Ids only, so nothing personal sits in the queue. */
+export type ChatRefs = { memberId?: string; poolId?: string; jobId?: string; machineId?: string; faultId?: string; scheduleId?: string };
 
 /**
  * The plain-text alert for one event, built when it is sent. Null when the record has gone (the alert is
@@ -17,6 +18,7 @@ export async function chatMessage(spaceId: string, event: ChatEvent, refs: ChatR
   const space = await prisma.space.findUnique({ where: { id: spaceId }, select: { name: true, slug: true } });
   if (!space) return null;
   if (event === "consumable-low-stock") return lowStockMessage(space, refs.poolId);
+  if (event === "maintenance-due" || event === "fault-reported" || event === "warranty-expiring") return upkeepMessage(spaceId, space, event, refs);
   if (event.startsWith("job-") && refs.jobId) {
     const job = await prisma.job.findFirst({ where: { id: refs.jobId, spaceId }, select: { number: true, title: true } });
     return job ? `${space.name}: J-${String(job.number).padStart(4, "0")} ${event.slice(4)}${includeNames ? `: ${job.title}` : "."}\n${absoluteUrl(`/dashboard/${space.slug}/jobs/${job.number}`)}` : null;

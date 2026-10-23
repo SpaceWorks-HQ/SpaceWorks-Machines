@@ -1,5 +1,5 @@
-/** Staff alerts a chat channel can receive. Client-safe. Later phases add job, payment and maintenance events. */
-export const CHAT_EVENTS = ["join-request", "member-joined", "member-left", "consumable-low-stock", "job-submitted", "job-cancelled", "job-failed", "job-payment"] as const;
+/** Staff alerts a chat channel can receive. Client-safe.  */
+export const CHAT_EVENTS = ["join-request", "member-joined", "member-left", "consumable-low-stock", "job-submitted", "job-cancelled", "job-failed", "job-payment", "maintenance-due", "fault-reported", "warranty-expiring"] as const;
 export type ChatEvent = (typeof CHAT_EVENTS)[number];
 
 export const CHAT_EVENT_LABELS: Record<ChatEvent, string> = {
@@ -11,6 +11,9 @@ export const CHAT_EVENT_LABELS: Record<ChatEvent, string> = {
   "job-cancelled": "A job was cancelled",
   "job-failed": "A job failed",
   "job-payment": "A payment was received",
+  "maintenance-due": "Maintenance is due or overdue",
+  "fault-reported": "A fault was reported",
+  "warranty-expiring": "A warranty is expiring",
 };
 
 export const CHAT_KINDS = ["SLACK", "DISCORD", "MATTERMOST", "TELEGRAM", "WHATSAPP"] as const;

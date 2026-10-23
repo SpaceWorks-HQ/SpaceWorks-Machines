@@ -82,22 +82,35 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
   request form, requester job page, `/account/jobs`, `/j/[token]` status link, staff job board and job page
   with every action, payments page with CSV export, job settings and pricing rules. Migration
   `0003_job_payments`. Map of the code: `docs/JOBS.md`.
+- Phase 4, Upkeep (`lib/upkeep`): maintenance schedules by time, machine hours or job count with due state and
+  reminders once per due cycle, append-only maintenance records with attachments (completing a schedule advances
+  it), downtime windows, fault reports (makers from the public machine page, staff from the machine) with the
+  OPEN → RESOLVED / WON'T FIX workflow and photos, warranty with documents and expiry reminders, daily beat
+  sweeps (`maintenance-due`, `warranty-expiry`), per-machine service history, and reports (`lib/reports`:
+  jobs, utilisation with availability/MTBF/MTTR, consumables, revenue per currency, maintenance, warranty)
+  with CSV export. Upkeep files share the private machine-file store and are staff-only.
 
-**How it was verified:** lint, typecheck, unit (530), integration (453, PostgreSQL), `build`, `build:jobs`,
+**How it was verified:** lint, typecheck, unit (546), integration (463, PostgreSQL), `build`, `build:jobs`,
 frontend typecheck and build, `frontend:catalog --check`, `prisma migrate diff` (no drift), and the production
-browser suites `test:e2e:vps` and `test:e2e:split` (15 tests each, signed-in journeys included). Those two
+browser suites `test:e2e:vps` and `test:e2e:split` (16 tests each, signed-in journeys included). Those two
 scripts accept `--external-services` (use DATABASE_URL, REDIS_URL and optional S3_* from the environment instead
 of starting containers) and seed the demo when DEMO_PASSWORD is set. On Windows run them inside a Linux
 container: their server commands use POSIX syntax.
 
 ## What is left
 
-Phases 4 to 6 from `docs/plans/2026-10-23-machines-build.md`:
-4. Upkeep: maintenance schedules on top of the Phase 3 meters, downtime, fault reports, warranty, service
-   history, reports.
+Phases 5 and 6 from `docs/plans/2026-10-23-machines-build.md`:
 5. Integrations: printer adapter layer, REST API with API keys, webhooks, audit log views.
 6. Ship: README with real screenshots, one-line VPS install and Render deploy verified, e2e journeys,
    design polish, and an independent review. Then open the `dev → main` PR for the owner.
+
+## Open questions
+
+Decisions taken conservatively while building without the owner; change them if they're wrong.
+- Reports use UTC calendar days for their date range, not the space's time zone.
+- Revenue figures in reports need `payments.view` as well as `reports.view`.
+- A fault's reporter can add photos only within a day of reporting; makers can't see fault photos afterwards.
+- Overdue schedules with "take out of service" only block a machine that is idle or reserved, never a running job.
 
 ## Run it locally
 
