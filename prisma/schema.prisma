@@ -972,6 +972,9 @@ model Payment {
   providerPaymentId String?
   checkoutUrl       String?
   checkoutExpiresAt DateTime?
+  /// Durable idempotency key and start time survive a lost provider response.
+  checkoutKey       String?
+  checkoutStartedAt DateTime?
   reference         String         @default("")
   note              String         @default("")
   paidAt            DateTime?
@@ -1010,20 +1013,21 @@ enum RefundReason {
 }
 
 model Refund {
-  id               String       @id @default(cuid())
-  spaceId          String
-  paymentId        String
-  amount           Int
-  reason           RefundReason
-  note             String       @default("")
-  status           RefundStatus @default(PENDING)
+  id                 String       @id @default(cuid())
+  spaceId            String
+  paymentId          String
+  amount             Int
+  reason             RefundReason
+  note               String       @default("")
+  status             RefundStatus @default(PENDING)
   /// Gateway refunds go back through the provider; offline refunds are recorded as handed back.
-  viaGateway       Boolean      @default(false)
-  providerRefundId String?
-  failureReason    String       @default("")
-  createdById      String?
-  processedAt      DateTime?
-  createdAt        DateTime     @default(now())
+  viaGateway         Boolean      @default(false)
+  providerRefundId   String?
+  gatewayAttemptedAt DateTime?
+  failureReason      String       @default("")
+  createdById        String?
+  processedAt        DateTime?
+  createdAt          DateTime     @default(now())
 
   payment Payment @relation(fields: [spaceId, paymentId], references: [spaceId, id], onDelete: NoAction)
 
@@ -1072,6 +1076,7 @@ model SpaceJobSettings {
   refundOnCancel                 RefundRule      @default(FULL)
   refundOnCancelPercent          Int             @default(100)
   refundOnReject                 RefundRule      @default(FULL)
+  refundOnRejectPercent          Int             @default(100)
   /// Requester email per event: { submitted, approved, rejected, started, completed, failed, cancelled, payment } booleans.
   requesterEmails                Json            @default("{}")
   /// Staff alerts per event, same shape; delivered by email to staff with jobs.review and to chat channels.

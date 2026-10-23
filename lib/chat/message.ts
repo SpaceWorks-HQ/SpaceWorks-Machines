@@ -7,7 +7,7 @@ import { formatQuantity } from "@/lib/consumables/math";
 import { METERING_UNIT_LABELS } from "@/lib/machines/presets";
 
 /** Ids only, so nothing personal sits in the queue. Later phases add jobId, machineId and so on. */
-export type ChatRefs = { memberId?: string; poolId?: string };
+export type ChatRefs = { memberId?: string; poolId?: string; jobId?: string };
 
 /**
  * The plain-text alert for one event, built when it is sent. Null when the record has gone (the alert is
@@ -17,6 +17,10 @@ export async function chatMessage(spaceId: string, event: ChatEvent, refs: ChatR
   const space = await prisma.space.findUnique({ where: { id: spaceId }, select: { name: true, slug: true } });
   if (!space) return null;
   if (event === "consumable-low-stock") return lowStockMessage(space, refs.poolId);
+  if (event.startsWith("job-") && refs.jobId) {
+    const job = await prisma.job.findFirst({ where: { id: refs.jobId, spaceId }, select: { number: true, title: true } });
+    return job ? `${space.name}: J-${String(job.number).padStart(4, "0")} ${event.slice(4)}${includeNames ? `: ${job.title}` : "."}\n${absoluteUrl(`/dashboard/${space.slug}/jobs/${job.number}`)}` : null;
+  }
   if (!refs.memberId) return null;
   const member = await prisma.spaceMember.findFirst({ where: { id: refs.memberId, spaceId }, select: { user: { select: { name: true } } } });
   if (!member && event !== "member-left") return null;

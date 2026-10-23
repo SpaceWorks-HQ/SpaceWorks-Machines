@@ -96,5 +96,28 @@ await prisma.machineType.upsert({
   update: { archivedAt: null },
 });
 
+// A dedicated paid service for the complete maker-to-collection journey.
+const jobType = await prisma.machineType.upsert({
+  where: { spaceId_slug: { spaceId: tinkerspace.id, slug: "prototype-printing" } },
+  create: { spaceId: tinkerspace.id, slug: "prototype-printing", name: "Prototype printing", icon: "printer",
+    requesterPicksMachine: true, requiresApproval: true, allocationPolicy: "FIRST_IDLE",
+    filePolicy: { extensions: ["stl"], maxBytes: 20 * 1024 * 1024, maxFiles: 5, required: true },
+    requestFields: [{ key: "finish", label: "Finish", kind: "text" }] },
+  update: { archivedAt: null, acceptsJobs: true },
+});
+await prisma.machine.upsert({
+  where: { spaceId_slug: { spaceId: tinkerspace.id, slug: "demo-job-printer" } },
+  create: { spaceId: tinkerspace.id, typeId: jobType.id, slug: "demo-job-printer", name: "Demo job printer", isPublic: true },
+  update: { retiredAt: null, acceptsJobs: true },
+});
+await prisma.spaceJobSettings.upsert({
+  where: { spaceId: tinkerspace.id },
+  create: { spaceId: tinkerspace.id, paymentsEnabled: true, maxOpenJobsPerRequester: 100 },
+  update: { jobsEnabled: true, paymentsEnabled: true, maxOpenJobsPerRequester: 100 },
+});
+if (!await prisma.pricingRule.findFirst({ where: { spaceId: tinkerspace.id, typeId: jobType.id, machineId: null, audience: "MEMBER" } })) {
+  await prisma.pricingRule.create({ data: { spaceId: tinkerspace.id, typeId: jobType.id, mode: "FLAT", flatFee: 5000, paymentTiming: "ON_COMPLETION" } });
+}
+
 await prisma.$disconnect();
 console.log(`seed-demo: ${spaces.length} spaces and 6 accounts (admin, owner, machines, viewer, maker, applicant @demo.test) ready.`);

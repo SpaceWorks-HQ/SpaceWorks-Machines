@@ -16,7 +16,7 @@ function entity(body: Record<string, unknown>, name: string): Record<string, unk
   return payload[name]?.entity ?? {};
 }
 
-/** Razorpay Orders API with Checkout.js on the pay page. Webhooks are signed with the webhook secret. */
+/** Payment Links redirect checkout. Webhooks are signed with the webhook secret. */
 function razorpayRefund(refund: Record<string, unknown>) {
   const status = refund.status === "processed" ? "processed" as const : refund.status === "failed" ? "failed" as const : "pending" as const;
   return { gatewayRefundId: str(refund.id) ?? "", status };
@@ -24,19 +24,41 @@ function razorpayRefund(refund: Record<string, unknown>) {
 
 export const razorpay: PaymentGateway = {
   async createCheckout(credentials, request) {
-    const order = await gatewayRequest(`${API}/orders`, {
+    const order = await gatewayRequest(`${API}/payment_links`, {
       method: "POST",
       auth: auth(credentials.keyId, credentials.secret),
       body: JSON.stringify({
         amount: request.amountMinor,
         currency: request.currency,
-        receipt: request.paymentId.slice(0, 40),
-        notes: { paymentId: request.paymentId, spaceId: request.spaceId, reference: request.reference ?? "" },
+        reference_id: request.paymentId,
+        accept_partial: false,
+        description: request.description,
+        customer: request.customer,
+        callback_url: request.successUrl,
+        callback_method: "get",
+        notes: { paymentId: request.paymentId, spaceId: request.spaceId, jobId: request.reference ?? "" },
       }),
     });
     const orderId = str(order.id);
-    if (!orderId) throw new Error("Razorpay did not return an order.");
-    return { kind: "razorpay", orderId, keyId: credentials.keyId! };
+    const url = str(order.short_url);
+    if (!orderId || !url) throw new Error("Razorpay did not return a payment link.");
+    return { kind: "redirect", orderId, url, ...(num(order.expire_by) ? { expiresAt: new Date(num(order.expire_by) * 1000) } : {}) };
+  },
+
+  async findCheckout(credentials, paymentId) {
+    const result = await gatewayRequest(`${API}/payment_links?reference_id=${encodeURIComponent(paymentId)}`, { method: "GET", auth: auth(credentials.keyId, credentials.secret) });
+    const links = Array.isArray(result.payment_links) ? result.payment_links as Record<string, unknown>[] : [];
+    const link = links.find((item) => item.reference_id === paymentId);
+    if (!link) return null;
+    if (!str(link.id) || !str(link.short_url)) throw new Error("Razorpay returned an invalid payment link.");
+    return { kind: "redirect", orderId: String(link.id), url: String(link.short_url) };
+  },
+
+  async paymentReference(credentials, gatewayPaymentId) {
+    const result = await gatewayRequest(`${API}/payment_links?payment_id=${encodeURIComponent(gatewayPaymentId)}`, { method: "GET", auth: auth(credentials.keyId, credentials.secret) });
+    const links = Array.isArray(result.payment_links) ? result.payment_links as Record<string, unknown>[] : [];
+    const link = links.length === 1 ? links[0] : null;
+    return link && str(link.reference_id) && str(link.id) ? { paymentId: String(link.reference_id), orderId: String(link.id) } : null;
   },
 
   verifyWebhook(credentials, rawBody, headers, now = new Date()) {
@@ -47,7 +69,7 @@ export const razorpay: PaymentGateway = {
     // request can't be replayed later.
     try {
       const created = num((JSON.parse(rawBody) as Record<string, unknown>).created_at);
-      return created > 0 && now.getTime() / 1000 - created < REPLAY_WINDOW_SECONDS;
+      return created > 0 && created <= now.getTime() / 1000 + 300 && now.getTime() / 1000 - created < REPLAY_WINDOW_SECONDS;
     } catch {
       return false;
     }
@@ -60,6 +82,12 @@ export const razorpay: PaymentGateway = {
     void headers;
     const eventId = `${str(body.event)}:${str(entity(body, "payment").id) ?? str(entity(body, "refund").id) ?? ""}:${num(body.created_at)}`;
     switch (body.event) {
+      case "payment_link.paid": {
+        const link = entity(body, "payment_link");
+        const payment = entity(body, "payment");
+        return { type: "captured", eventId, orderId: str(link.id), paymentId: str(link.reference_id), gatewayPaymentId: str(payment.id),
+          amountMinor: num(link.amount_paid), currency: str(link.currency) ?? "", method: str(payment.method) };
+      }
       case "payment.captured": {
         const payment = entity(body, "payment");
         const notes = (payment.notes ?? {}) as Record<string, unknown>;
@@ -86,11 +114,13 @@ export const razorpay: PaymentGateway = {
   },
 
   async fetchPayment(credentials, orderId) {
-    const result = await gatewayRequest(`${API}/orders/${encodeURIComponent(orderId)}/payments`, { method: "GET", auth: auth(credentials.keyId, credentials.secret) });
-    const items = Array.isArray(result.items) ? (result.items as Array<Record<string, unknown>>) : [];
-    const captured = items.find((item) => item.status === "captured");
+    const key = auth(credentials.keyId, credentials.secret);
+    const link = await gatewayRequest(`${API}/payment_links/${encodeURIComponent(orderId)}`, { method: "GET", auth: key });
+    const items = Array.isArray(link.payments) ? link.payments as Record<string, unknown>[] : [];
+    const paymentId = items.map((item) => str(item.payment_id) ?? str(item.id)).find(Boolean);
+    const captured = link.status === "paid" && paymentId ? await gatewayRequest(`${API}/payments/${encodeURIComponent(paymentId)}`, { method: "GET", auth: key }) : null;
     if (captured) return { status: "paid", gatewayPaymentId: str(captured.id), amountMinor: num(captured.amount), currency: str(captured.currency) ?? "", method: str(captured.method) };
-    if (items.length > 0 && items.every((item) => item.status === "failed")) return { status: "failed", reason: "Every attempt failed" };
+    if (link.status === "expired" || link.status === "cancelled") return { status: "failed", reason: "Payment Link expired or cancelled" };
     return { status: "pending" };
   },
 

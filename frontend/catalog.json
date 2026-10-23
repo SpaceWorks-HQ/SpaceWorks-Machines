@@ -1,6 +1,11 @@
 {
   "readers": [
     {
+      "module": "lib/views/app__account__jobs__page",
+      "name": "loadAccountJobsView",
+      "id": "app__account__jobs__page:loadAccountJobsView"
+    },
+    {
       "module": "lib/views/app__account__layout",
       "name": "loadAccountShell",
       "id": "app__account__layout:loadAccountShell"
@@ -56,6 +61,11 @@
       "id": "app__dashboard__spaceSlug__integrations__page:loadIntegrationsView"
     },
     {
+      "module": "lib/views/app__dashboard__spaceSlug__jobs__number__page",
+      "name": "loadStaffJobView",
+      "id": "app__dashboard__spaceSlug__jobs__number__page:loadStaffJobView"
+    },
+    {
       "module": "lib/views/app__dashboard__spaceSlug__jobs__page",
       "name": "loadJobsView",
       "id": "app__dashboard__spaceSlug__jobs__page:loadJobsView"
@@ -66,9 +76,19 @@
       "id": "app__dashboard__spaceSlug__layout:loadSpaceSlugShell"
     },
     {
+      "module": "lib/views/app__dashboard__spaceSlug__machine-settings__jobs__page",
+      "name": "loadJobSettingsView",
+      "id": "app__dashboard__spaceSlug__machine-settings__jobs__page:loadJobSettingsView"
+    },
+    {
       "module": "lib/views/app__dashboard__spaceSlug__machine-settings__page",
       "name": "loadMachineSettingsView",
       "id": "app__dashboard__spaceSlug__machine-settings__page:loadMachineSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__spaceSlug__machine-settings__pricing__page",
+      "name": "loadPricingRulesView",
+      "id": "app__dashboard__spaceSlug__machine-settings__pricing__page:loadPricingRulesView"
     },
     {
       "module": "lib/views/app__dashboard__spaceSlug__machine-settings__types__typeSlug__page",
@@ -131,9 +151,19 @@
       "id": "app__dashboard__spaceSlug__team__page:loadSpaceTeamView"
     },
     {
+      "module": "lib/views/app__j__token__page",
+      "name": "loadPublicJobView",
+      "id": "app__j__token__page:loadPublicJobView"
+    },
+    {
       "module": "lib/views/app__join__space__token__page",
       "name": "loadJoinSpaceView",
       "id": "app__join__space__token__page:loadJoinSpaceView"
+    },
+    {
+      "module": "lib/views/app__s__spaceSlug__jobs__number__page",
+      "name": "loadRequesterJobView",
+      "id": "app__s__spaceSlug__jobs__number__page:loadRequesterJobView"
     },
     {
       "module": "lib/views/app__s__spaceSlug__layout",
@@ -154,6 +184,11 @@
       "module": "lib/views/app__s__spaceSlug__page",
       "name": "loadPublicSpacePage",
       "id": "app__s__spaceSlug__page:loadPublicSpacePage"
+    },
+    {
+      "module": "lib/views/app__s__spaceSlug__request__page",
+      "name": "loadJobRequestView",
+      "id": "app__s__spaceSlug__request__page:loadJobRequestView"
     },
     {
       "module": "lib/views/app__sitemap",
@@ -371,6 +406,51 @@
       "module": "app/actions/ip-blocks",
       "name": "unblockAddress",
       "id": "ip-blocks:unblockAddress"
+    },
+    {
+      "module": "app/actions/job-payments",
+      "name": "payNowAction",
+      "id": "job-payments:payNowAction"
+    },
+    {
+      "module": "app/actions/job-payments",
+      "name": "jobPaymentAction",
+      "id": "job-payments:jobPaymentAction"
+    },
+    {
+      "module": "app/actions/job-settings",
+      "name": "saveJobSettingsAction",
+      "id": "job-settings:saveJobSettingsAction"
+    },
+    {
+      "module": "app/actions/job-settings",
+      "name": "saveJobMoneySettingsAction",
+      "id": "job-settings:saveJobMoneySettingsAction"
+    },
+    {
+      "module": "app/actions/job-settings",
+      "name": "savePricingRuleAction",
+      "id": "job-settings:savePricingRuleAction"
+    },
+    {
+      "module": "app/actions/job-settings",
+      "name": "deletePricingRuleAction",
+      "id": "job-settings:deletePricingRuleAction"
+    },
+    {
+      "module": "app/actions/jobs",
+      "name": "submitJobAction",
+      "id": "jobs:submitJobAction"
+    },
+    {
+      "module": "app/actions/jobs",
+      "name": "createJobOnBehalfAction",
+      "id": "jobs:createJobOnBehalfAction"
+    },
+    {
+      "module": "app/actions/jobs",
+      "name": "transitionJobAction",
+      "id": "jobs:transitionJobAction"
     },
     {
       "module": "app/actions/machine-files",

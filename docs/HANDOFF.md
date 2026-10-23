@@ -47,9 +47,9 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
   (branch protection + `.github/CODEOWNERS`). Branch from `dev`, open PRs into `dev`.
 - Work in phases; each phase ends with lint, typecheck and tests green, a commit and a push to `dev`.
 - `CLAUDE.md` and `AGENTS.md` are byte-identical; edit one, copy it over the other.
-- Phases 1 and the Phase 2 domain were built by Claude Code sessions. From Phase 2's UI onwards the owner asked
-  for Codex: Codex implements each step, Claude writes the prompts, verifies every step, runs the gates and the
-  review. Any coding agent can continue from this file plus `CLAUDE.md`.
+- Phases 1 and the Phase 2 domain were built by Claude Code sessions. Phase 2 UI and Phase 3 were implemented
+  by Codex under Claude's prompts, verification, gates and review. From Phase 4 on the owner asked for Claude
+  only again. Any coding agent can continue from this file plus `CLAUDE.md`.
 
 ## Machines-specific decisions
 
@@ -74,20 +74,25 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
   machine pages `/s/[spaceSlug]/machines` and `/s/[spaceSlug]/machines/[machineSlug]` with public photos and
   documents. New capability `consumables.view` (all staff). The `0002_machines_domain` migration matches the
   schema (no drift).
+- Phase 3, Jobs. File validation and parsers (`lib/files`), pricing resolution and engine (`lib/pricing`), the
+  usage writer (`lib/usage/record.ts`, the only writer of usage and meters), submission, the lifecycle
+  (`lib/jobs/transitions.ts`, the only writer of job status), queue position and ETA, job payments (upfront,
+  deposit, on completion, pay later; Razorpay Payment Links, Stripe Checkout, offline with maker-checker, waive),
+  refunds (automatic proposals, manual, gateway and offline), webhook settlement, notifications, and the UI:
+  request form, requester job page, `/account/jobs`, `/j/[token]` status link, staff job board and job page
+  with every action, payments page with CSV export, job settings and pricing rules. Migration
+  `0003_job_payments`. Map of the code: `docs/JOBS.md`.
 
-**How it was verified:** lint, typecheck, unit (420), integration (95, PostgreSQL), `build`, `build:jobs`,
+**How it was verified:** lint, typecheck, unit (530), integration (453, PostgreSQL), `build`, `build:jobs`,
 frontend typecheck and build, `frontend:catalog --check`, `prisma migrate diff` (no drift), and the production
-browser suites `test:e2e:vps` and `test:e2e:split` (14 tests each, signed-in journeys included). Those two
+browser suites `test:e2e:vps` and `test:e2e:split` (15 tests each, signed-in journeys included). Those two
 scripts accept `--external-services` (use DATABASE_URL, REDIS_URL and optional S3_* from the environment instead
 of starting containers) and seed the demo when DEMO_PASSWORD is set. On Windows run them inside a Linux
 container: their server commands use POSIX syntax.
 
 ## What is left
 
-Phases 3 to 6 from `docs/plans/2026-10-23-machines-build.md`:
-3. Jobs: uploads validated by file policy, queue and position, review and lifecycle, pricing engine,
-   Razorpay/Stripe/offline/pay-later payments and refunds, consumable deduction, notifications, and the usage
-   writer (`lib/usage/record.ts`, moved here from Phase 4 because job completion writes usage).
+Phases 4 to 6 from `docs/plans/2026-10-23-machines-build.md`:
 4. Upkeep: maintenance schedules on top of the Phase 3 meters, downtime, fault reports, warranty, service
    history, reports.
 5. Integrations: printer adapter layer, REST API with API keys, webhooks, audit log views.

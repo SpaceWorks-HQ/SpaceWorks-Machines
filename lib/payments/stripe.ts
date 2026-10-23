@@ -45,7 +45,7 @@ export const stripe: PaymentGateway = {
       method: "POST",
       auth: bearer(credentials.secret),
       contentType: "application/x-www-form-urlencoded",
-      idempotencyKey: `checkout-${request.paymentId}`,
+      idempotencyKey: `checkout-${request.checkoutKey ?? request.paymentId}`,
       body: form({
         mode: "payment",
         client_reference_id: request.paymentId,
@@ -58,14 +58,14 @@ export const stripe: PaymentGateway = {
         "line_items[0][price_data][product_data][name]": request.description.slice(0, 250),
         "metadata[paymentId]": request.paymentId,
         "metadata[spaceId]": request.spaceId,
-        "metadata[reference]": request.reference ?? "",
+        "metadata[jobId]": request.reference ?? "",
         "payment_intent_data[metadata][paymentId]": request.paymentId,
       }),
     });
     const orderId = str(session.id);
     const url = str(session.url);
     if (!orderId || !url) throw new Error("Stripe did not return a checkout session.");
-    return { kind: "redirect", orderId, url };
+    return { kind: "redirect", orderId, url, ...(num(session.expires_at) ? { expiresAt: new Date(num(session.expires_at) * 1000) } : {}) };
   },
 
   verifyWebhook(credentials, rawBody, headers, now = new Date()) {

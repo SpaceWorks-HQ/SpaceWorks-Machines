@@ -5,6 +5,7 @@ export const ACCOUNT_ROOT_HREF = "/account";
 
 export const ACCOUNT_TABS: ReadonlyArray<AccountTab> = [
   { href: ACCOUNT_ROOT_HREF, label: "Spaces" },
+  { href: "/account/jobs", label: "Jobs" },
   { href: "/account/profile", label: "Profile" },
   { href: "/account/security", label: "Security" },
   { href: "/account/privacy", label: "Data and privacy" },

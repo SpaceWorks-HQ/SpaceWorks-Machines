@@ -10,6 +10,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   // Signed-in journeys share the seeded demo spaces, so files run one after another.
   fullyParallel: false,
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   // The development server compiles each route on first visit, which is slow on CI runners.

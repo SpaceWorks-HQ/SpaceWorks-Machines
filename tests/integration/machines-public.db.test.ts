@@ -1,4 +1,5 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+vi.mock("@/lib/auth", () => ({ auth: async () => null }));
 import { SpaceStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { resolveMachineFile } from "@/lib/machines/fileAccess";

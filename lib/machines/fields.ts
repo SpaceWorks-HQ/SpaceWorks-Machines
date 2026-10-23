@@ -131,6 +131,7 @@ export function coerceFieldValue(field: FieldDefinition, raw: unknown, context: 
     case "colour": {
       const options = field.kind === "select" ? field.options ?? [] : field.kind === "material" ? context.materials ?? [] : context.colours ?? [];
       if (typeof raw !== "string") return { error: "Choose an option" };
+      if (field.kind !== "select" && raw.trim().toLowerCase() === "no preference") return { value: "No preference" };
       // Requests may say "no preference" when the type offers no list.
       if (field.kind !== "select" && options.length === 0) return { value: raw.trim().slice(0, 60) };
       const match = oneOf(raw, options);

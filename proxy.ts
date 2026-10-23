@@ -70,7 +70,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/api/:path*",
+    // Job uploads enforce their own authentication, origin and byte limits before reading the body.
+    // Bypass Next's 25 MB body clone so a type's larger file policy can be honoured.
+    "/api/((?!spaces/[^/]+/jobs/files$).*)",
     {
       source: "/((?!api|_next/static|_next/image|favicon.ico).*)",
       missing: [

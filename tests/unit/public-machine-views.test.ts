@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   notFound: vi.fn(() => { throw new Error("NEXT_NOT_FOUND"); }),
 }));
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
+vi.mock("@/lib/jobs/intake", () => ({ canRequestMachine: async () => false }));
 vi.mock("@/lib/db", () => ({ prisma: {
   space: { findUnique: mocks.space }, machine: { findMany: mocks.machines, findFirst: mocks.machine },
 } }));

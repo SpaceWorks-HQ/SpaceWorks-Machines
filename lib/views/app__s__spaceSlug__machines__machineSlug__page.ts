@@ -4,12 +4,13 @@ import { prisma } from "@/lib/db";
 import { loadPublicMachineSpace } from "@/lib/publicSpace";
 import { machineFileUrl } from "@/lib/machines/fileAccess";
 import { PUBLIC_MACHINE, PUBLIC_PHOTO, publicMachine, publicPhoto } from "@/lib/machines/publicQueries";
+import { canRequestMachine } from "@/lib/jobs/intake";
 
 const readView = cache(async (spaceSlug: string, machineSlug: string) => {
   const space = await loadPublicMachineSpace(spaceSlug);
   const row = await prisma.machine.findFirst({
     where: { spaceId: space.id, slug: machineSlug, isPublic: true, retiredAt: null },
-    select: { ...PUBLIC_MACHINE,
+    select: { ...PUBLIC_MACHINE, id: true, typeId: true,
       photos: { where: { spaceId: space.id }, orderBy: [{ sortOrder: "asc" }, { id: "asc" }], select: PUBLIC_PHOTO },
       documents: { where: { spaceId: space.id, isPublic: true }, orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         select: { id: true, title: true, storageKey: true, kind: true },
@@ -17,7 +18,7 @@ const readView = cache(async (spaceSlug: string, machineSlug: string) => {
     },
   });
   if (!row) notFound();
-  return { space, machine: publicMachine(row), photos: row.photos.map(publicPhoto),
+  return { space, machine: publicMachine(row), requestHref: await canRequestMachine(space.id, row.typeId, row.id) ? `/s/${space.slug}/request?type=${row.typeId}&machine=${row.id}` : null, photos: row.photos.map(publicPhoto),
     documents: row.documents.map((document) => ({ id: document.id, title: document.title, kind: document.kind, url: machineFileUrl(document.storageKey) })),
   };
 });

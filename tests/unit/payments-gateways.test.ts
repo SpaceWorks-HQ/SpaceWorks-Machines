@@ -42,13 +42,14 @@ describe("Razorpay", () => {
     expect(verifyCheckoutSignature("secret_key", "order_1", "pay_2", hmac("secret_key", "order_1|pay_1"))).toBe(false);
   });
 
-  it("creates orders with our payment id in the notes", async () => {
-    const fetch = vi.fn(async () => new Response(JSON.stringify({ id: "order_42" }), { status: 200 }));
+  it("creates Payment Links with our reference and callback", async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify({ id: "plink_42", short_url: "https://rzp.io/pay" }), { status: 200 }));
     vi.stubGlobal("fetch", fetch);
     const result = await razorpay.createCheckout(credentials, { paymentId: "p1", spaceId: "o1", reference: "t1", amountMinor: 118000, currency: "INR", description: "Annual", spaceName: "Club", customer: { name: "A", email: "a@example.test" }, successUrl: "https://x/s", cancelUrl: "https://x/c" });
-    expect(result).toEqual({ kind: "razorpay", orderId: "order_42", keyId: "rzp_test_abc" });
+    expect(result).toEqual({ kind: "redirect", orderId: "plink_42", url: "https://rzp.io/pay" });
     const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
-    expect(JSON.parse(String(init.body))).toMatchObject({ amount: 118000, currency: "INR", notes: { paymentId: "p1" } });
+    expect((fetch.mock.calls[0] as unknown as [string])[0]).toBe("https://api.razorpay.com/v1/payment_links");
+    expect(JSON.parse(String(init.body))).toMatchObject({ amount: 118000, currency: "INR", reference_id: "p1", callback_url: "https://x/s", accept_partial: false, notes: { paymentId: "p1", jobId: "t1" } });
   });
 });
 

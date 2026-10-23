@@ -19,7 +19,7 @@ export const loadPublicMachineSpace = cache(async (slug: string) => {
  * The space behind a public page. Active and suspended spaces have one (a suspended one says it isn't
  * taking makers); applications, refusals and archived spaces don't.
  */
-export const loadPublicSpace = cache(async (slug: string) => {
+export const loadPublicSpace = cache(async (slug: string, archivedJobFrame = false) => {
   const space = await prisma.space.findUnique({
     where: { slug },
     select: {
@@ -27,6 +27,12 @@ export const loadPublicSpace = cache(async (slug: string) => {
       city: true, region: true, country: true, website: true, contactEmail: true, contactPhone: true, locale: true,
     },
   });
-  if (!space || (space.status !== "ACTIVE" && space.status !== "SUSPENDED")) notFound();
+  if (!space) notFound();
+  if (space.status === "ARCHIVED" && archivedJobFrame) {
+    // A past requester keeps the frame around their job history; archived catalogues stay hidden.
+    const { auth } = await import("@/lib/auth");
+    const session = await auth();
+    if (!session?.user?.id || !await prisma.job.findFirst({ where: { spaceId: space.id, requesterId: session.user.id }, select: { id: true } })) notFound();
+  } else if (space.status !== "ACTIVE" && space.status !== "SUSPENDED") notFound();
   return space;
 });

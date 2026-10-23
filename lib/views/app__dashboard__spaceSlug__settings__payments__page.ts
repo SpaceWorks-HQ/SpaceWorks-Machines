@@ -3,6 +3,8 @@ import { can, requireSpaceCapability } from "@/lib/permissions";
 import { getRequestOrigin } from "@/lib/publicUrl";
 import { ensurePaymentSettings, webhookPath } from "@/lib/payments/config";
 import { paymentSecretsConfigured } from "@/lib/payments/secrets";
+import { JOB_DEFAULTS } from "@/lib/jobs/settingsDefaults";
+import { moneySettingsSchema } from "@/lib/jobs/settingsSchemas";
 
 /** Gateway and offline payment settings. Secrets never leave the server; only whether one is saved. */
 export async function loadPaymentSettingsView({ params }: { params: Promise<{ spaceSlug: string }> }) {
@@ -18,6 +20,7 @@ export async function loadPaymentSettingsView({ params }: { params: Promise<{ sp
     space: details,
     canEdit,
     secretsReady: paymentSecretsConfigured(),
+    jobPolicy: moneySettingsSchema.parse(await prisma.spaceJobSettings.findUnique({ where: { spaceId: space.id } }) ?? JOB_DEFAULTS),
     gateway: {
       provider: settings.provider,
       keyId: settings.keyId,

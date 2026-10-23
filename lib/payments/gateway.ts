@@ -4,8 +4,7 @@ import crypto from "crypto";
 
 /**
  * One interface for both gateways, so pricing, tax and receipts are identical whichever a space
- * uses. Adapters talk to the providers' REST APIs directly; no provider SDK or script is loaded on our
- * pages except Razorpay's Checkout.js on the pay page.
+ * uses. Adapters talk to the providers' REST APIs directly and return hosted checkout links.
  */
 
 export type GatewayCredentials = { keyId: string | null; secret: string; webhookSecret: string | null; testMode: boolean };
@@ -22,11 +21,12 @@ export type CheckoutRequest = {
   customer: { name: string; email: string };
   successUrl: string;
   cancelUrl: string;
+  checkoutKey?: string;
 };
 
 export type CheckoutResult =
   | { kind: "razorpay"; orderId: string; keyId: string }
-  | { kind: "redirect"; orderId: string; url: string };
+  | { kind: "redirect"; orderId: string; url: string; expiresAt?: Date };
 
 export type GatewayEvent =
   | { type: "captured"; eventId: string; orderId: string | null; paymentId: string | null; gatewayPaymentId: string | null; amountMinor: number; currency: string; method: string | null }
@@ -43,6 +43,10 @@ export type FetchedPayment =
 export type RefundResult = { gatewayRefundId: string; status: "pending" | "processed" | "failed" };
 
 export interface PaymentGateway {
+  /** Recover a Payment Link after an ambiguous create response, without creating another. */
+  findCheckout?(credentials: GatewayCredentials, paymentId: string): Promise<CheckoutResult | null>;
+  /** Razorpay capture payloads may omit link metadata; resolve through the account's link lookup. */
+  paymentReference?(credentials: GatewayCredentials, gatewayPaymentId: string): Promise<{ paymentId: string; orderId: string } | null>;
   createCheckout(credentials: GatewayCredentials, request: CheckoutRequest): Promise<CheckoutResult>;
   verifyWebhook(credentials: GatewayCredentials, rawBody: string, headers: Headers, now?: Date): boolean;
   parseEvent(rawBody: string, headers: Headers): GatewayEvent;
