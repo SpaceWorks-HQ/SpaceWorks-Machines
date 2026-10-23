@@ -6,6 +6,8 @@ vi.mock("@/lib/storage", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/lib/storage")>();
   return { ...original, downloadFile: mocks.download };
 });
+vi.mock("@/lib/auth", () => ({ auth: vi.fn(async () => null) }));
+vi.mock("@/lib/machines/fileAccess", () => ({ resolveMachineFile: vi.fn(async () => null) }));
 
 import { GET } from "@/app/api/uploads/[...key]/route";
 

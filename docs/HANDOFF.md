@@ -68,9 +68,7 @@ roles, magic link, and the BullMQ worker and beat are in place.
 
 **Last commit, work in progress (`wip:`):** Phase 2, Machines. It adds machine types, machines,
 consumables, machine files, space job settings, the spaces API, webhooks and `lib/machines`/`lib/consumables`
-with their Prisma schema changes. Typecheck is clean and 343 unit tests pass. One known failure:
-`tests/unit/upload-route.test.ts` cannot load because `app/api/uploads/[...key]/route.ts` now pulls in
-next-auth. Mock `@/lib/auth` in that test. No migration has been generated for the schema changes yet;
+with their Prisma schema changes. Typecheck is clean and all 345 unit tests pass. No migration has been generated for the schema changes yet;
 run `npm run db:migrate` to create it.
 
 ## What is left
