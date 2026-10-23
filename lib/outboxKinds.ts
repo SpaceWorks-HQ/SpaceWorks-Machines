@@ -7,6 +7,7 @@ import { asAdminPayload, asInvitePayload, asNoticePayload, deliverAdminApplicati
 import { asChatPayload, deliverChatNotice } from "@/lib/chat/notify";
 import { asMagicLinkPayload, deliverMagicLink } from "@/lib/email/magicLink";
 import { asMemberNoticePayload, deliverMemberNotice } from "@/lib/email/members";
+import { asLowStockPayload, deliverLowStockAlert } from "@/lib/email/consumables";
 import { asLoginAlertPayload, asLoginCodePayload, deliverLoginAlert, deliverLoginCode } from "@/lib/email/loginSecurity";
 
 /** What a handler reports after a delivery attempt. Throw to retry; throw PermanentOutboxError to give up. */
@@ -126,6 +127,15 @@ const chatNotice: OutboxKindHandler = {
   },
 };
 
+const consumableLowStock: OutboxKindHandler = {
+  capability: false,
+  async deliver(value, messageId) {
+    const payload = asLowStockPayload(value);
+    if (!payload) throw new PermanentOutboxError();
+    return deliverLowStockAlert(payload, messageId);
+  },
+};
+
 /** Every email the platform can send. Add a kind here when a feature needs a new message. */
 export const OUTBOX_KINDS = {
   "password-reset": passwordReset,
@@ -138,6 +148,7 @@ export const OUTBOX_KINDS = {
   "login-code": loginCode,
   "login-alert": loginAlert,
   "magic-link": magicLink,
+  "consumable-low-stock": consumableLowStock,
 } satisfies Record<string, OutboxKindHandler>;
 
 export type OutboxKind = keyof typeof OUTBOX_KINDS;

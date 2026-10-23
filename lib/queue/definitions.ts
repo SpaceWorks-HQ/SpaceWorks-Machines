@@ -9,7 +9,9 @@ export const QUEUE_NAMES = ["outbox", "scheduled", "sync"] as const;
 export type QueueName = (typeof QUEUE_NAMES)[number];
 export type RepeatSchedule = { every: number } | { pattern: string; tz?: string };
 /** What travels through Redis: ids and registry names only, never email content, links or personal data. */
-export type QueueJob = { kind: "outbox"; outboxId: string } | { kind: "registered"; area: string };
+export type QueueJob = { kind: "outbox"; outboxId: string } | { kind: "registered"; area: string } | { kind: "webhook"; deliveryId: string };
+/** Job name for one outbound webhook delivery on the `sync` queue (lib/webhooks/emit.ts). */
+export const WEBHOOK_DELIVER_JOB = "webhooks.deliver";
 export type JobDefinition = { area: string; queue?: QueueName; schedule?: RepeatSchedule; run: (now: Date) => Promise<unknown> };
 
 export const JOB_OPTIONS: JobsOptions = {

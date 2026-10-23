@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **Start here:** `docs/HANDOFF.md` explains what this repo is (a standalone app split out of SpaceWorks, part of the SpaceWorks-HQ family), the decisions already made, what is done, the work in progress and what is left.
+
 Guidance for Claude Code (and other agents, via `AGENTS.md`) in this repository. `CLAUDE.md` is a byte-identical
 copy of `AGENTS.md` (`tests/unit/agent-guide.test.ts`); edit `AGENTS.md` and copy it over.
 

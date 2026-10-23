@@ -16,6 +16,7 @@ export type Bucket =
   | "payment"
   | "webhook"
   | "upload"
+  | "machineUpload"
   | "invite"
   | "apiRead"
   | "apiWrite"
@@ -39,6 +40,8 @@ const limits: Record<Bucket, { max: number; windowMs: number; }> = {
   // Gateway webhooks: their own generous bucket, exempt from the per-IP global limit.
   webhook: { max: 1200, windowMs: 60_000 },
   upload: { max: 12, windowMs: 60 * 60_000 },
+  // Machine photos and documents: a manager filling in a new machine uploads a dozen at a time.
+  machineUpload: { max: 120, windowMs: 60 * 60_000 },
   invite: { max: 30, windowMs: 60 * 60_000 },
   apiRead: { max: 600, windowMs: 60_000 },
   apiWrite: { max: 60, windowMs: 60_000 },

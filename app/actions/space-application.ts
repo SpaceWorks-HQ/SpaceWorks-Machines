@@ -23,6 +23,7 @@ import {
 import { spaceSlugSchema } from "@/lib/validators";
 import type { ActionResult } from "./space";
 import { flattenZodErrors } from "./utils";
+import { provisionSpace } from "@/lib/machines/provision";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);
 
@@ -89,6 +90,7 @@ export async function submitSpaceApplication(input: unknown): Promise<ActionResu
         data: { ...profileColumns(application), slug: application.slug, status: "PENDING_REVIEW", source: "SELF_SIGNUP" },
         select: { id: true, slug: true },
       });
+      await provisionSpace(tx, created.id);
       await tx.spaceMember.create({ data: { userId, spaceId: created.id, role: "OWNER" } });
       await tx.spaceReview.create({
         data: { spaceId: created.id, action: "SUBMITTED", actorUserId: userId, applicationSnapshot: applicationSnapshot(application) },

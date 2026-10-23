@@ -1,0 +1,36 @@
+import "server-only";
+
+import { prisma } from "@/lib/db";
+import { can, isStaffRole, spaceAllows } from "@/lib/permissionRoles";
+import { parseMachineFileKey } from "@/lib/storage/machineFiles";
+
+/** The app URL a machine photo or document is served from (always through the access check below). */
+export function machineFileUrl(storageKey: string) {
+  return `/api/uploads/${storageKey}`;
+}
+
+/** What a public page may show: an active space's public, in-service machine (and only its public documents). */
+function publiclyVisible(machine: { isPublic: boolean; retiredAt: Date | null; space: { status: string } }, documentPublic: boolean) {
+  return machine.isPublic && machine.retiredAt === null && machine.space.status === "ACTIVE" && documentPublic;
+}
+
+const MACHINE_SELECT = { isPublic: true, retiredAt: true, space: { select: { status: true } } } as const;
+
+/**
+ * Who may fetch a stored machine file: anyone for a photo or public document of a publicly listed machine,
+ * otherwise only active staff of the space (machines.view). Everything else is "not found".
+ */
+export async function resolveMachineFile(key: string, userId: string | null) {
+  const parsed = parseMachineFileKey(key);
+  if (!parsed) return null;
+  const where = { storageKey: key, spaceId: parsed.spaceId, machineId: parsed.machineId };
+  const file = parsed.kind === "photos"
+    ? await prisma.machinePhoto.findFirst({ where, select: { machine: { select: MACHINE_SELECT } } }).then((row) => row && { machine: row.machine, documentPublic: true, filename: null as string | null })
+    : await prisma.machineDocument.findFirst({ where, select: { isPublic: true, filename: true, machine: { select: MACHINE_SELECT } } }).then((row) => row && { machine: row.machine, documentPublic: row.isPublic, filename: row.filename });
+  if (!file) return null;
+  if (publiclyVisible(file.machine, file.documentPublic)) return { public: true, kind: parsed.kind, filename: file.filename };
+  if (!userId) return null;
+  const member = await prisma.spaceMember.findUnique({ where: { userId_spaceId: { userId, spaceId: parsed.spaceId } }, select: { role: true, status: true } });
+  if (!member || member.status !== "ACTIVE" || !isStaffRole(member.role) || !can(member.role, "machines.view") || !spaceAllows(file.machine.space.status as never, "machines.view")) return null;
+  return { public: false, kind: parsed.kind, filename: file.filename };
+}

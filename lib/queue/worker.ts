@@ -8,14 +8,20 @@ import { describeOperationalError } from "@/lib/redactSensitiveText";
 import { queueConnection } from "./client";
 import { QUEUE_NAMES, queueConcurrency, type JobDefinition, type QueueJob } from "./definitions";
 import { SCHEDULED_JOBS } from "./registry";
+import { deliverWebhook } from "@/lib/webhooks/deliver";
 
-/** Run one queued job: a registry entry by area, or one outbox row by id. */
+/** Run one queued job: a registry entry by area, one outbox row by id, or one webhook delivery by id. */
 export async function processQueueJob(job: Job<QueueJob>, token?: string, registry: readonly JobDefinition[] = SCHEDULED_JOBS) {
   const data = job.data;
   if (data.kind === "registered") {
     const definition = registry.find((item) => item.area === data.area);
     if (!definition) throw new UnrecoverableError("Job registration removed. Remove this job.");
     await definition.run(new Date());
+    return;
+  }
+  if (data.kind === "webhook") {
+    if (!/^[a-zA-Z0-9_-]{1,128}$/.test(data.deliveryId)) throw new UnrecoverableError("Invalid job definition.");
+    await deliverWebhook(data.deliveryId);
     return;
   }
   if (data.kind !== "outbox" || !/^[a-zA-Z0-9_-]{1,128}$/.test(data.outboxId)) throw new UnrecoverableError("Invalid job definition.");

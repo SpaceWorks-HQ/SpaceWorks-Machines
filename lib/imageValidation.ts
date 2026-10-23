@@ -76,7 +76,7 @@ function webpDimensions(bytes: Uint8Array) {
 }
 
 /** Verify binary image signatures and reject decode-bomb-sized inputs before storage. */
-function validateImageBytes(bytes: Uint8Array): SafeImage | { error: string } {
+export function validateImageBytes(bytes: Uint8Array): SafeImage | { error: string } {
   const isPng = bytes.length >= 24 && bytes.slice(0, 8).every((value, index) => value === [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a][index]);
   const isJpeg = bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
   const isWebp = bytes.length >= 16 && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP";

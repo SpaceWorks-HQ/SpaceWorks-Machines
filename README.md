@@ -57,3 +57,7 @@ curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Machines/m
 - [Email and chat notifications](docs/NOTIFICATIONS.md)
 - [Design](docs/DESIGN.md)
 - [Changelog](CHANGELOG.md)
+
+## Project status
+
+In active development: a standalone app split out of [SpaceWorks](https://github.com/SpaceWorks-HQ/SpaceWorks), part of the [SpaceWorks-HQ](https://github.com/SpaceWorks-HQ) family. See [`docs/HANDOFF.md`](docs/HANDOFF.md) for what is done, what is in progress and how to continue.

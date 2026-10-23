@@ -21,6 +21,8 @@ export const CAPABILITIES = {
   "members.manage": SPACE_MANAGERS,
   "machines.view": ALL_STAFF,
   "machines.manage": MACHINE_MANAGERS,
+  /** Set a machine's status by hand (idle, reserved, maintenance, offline) with a note. */
+  "machines.status": [...MACHINE_MANAGERS, "OPERATOR", "TECHNICIAN"],
   "machine.settings": MACHINE_MANAGERS,
   "printers.manage": MACHINE_MANAGERS,
   "jobs.view": ALL_STAFF,

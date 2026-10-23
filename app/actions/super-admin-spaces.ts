@@ -14,6 +14,7 @@ import { applicationSnapshot, notifyOwners, spaceApplicationSchema, releaseHeldS
 import { enqueueOutbox } from "@/lib/outbox";
 import type { ActionResult } from "./space";
 import { flattenZodErrors } from "./utils";
+import { provisionSpace } from "@/lib/machines/provision";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);
 
@@ -123,6 +124,7 @@ export async function createSpaceForOwner(input: unknown): Promise<ActionResult<
         data: { ...profile, slug, status: "ACTIVE", source: "SUPERADMIN" },
         select: { id: true },
       });
+      await provisionSpace(tx, created.id);
       await tx.spaceReview.create({
         data: { spaceId: created.id, action: "CREATED", actorUserId: session.user.id, applicationSnapshot: applicationSnapshot(application) },
       });
