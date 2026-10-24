@@ -35,19 +35,36 @@ What it does
 Installing a fork
   The same command works for any fork: it asks which GitHub repository to use (Enter = the
   main project), or pass it up front with --repo YourName/YourFork.
+
+Options
+  --repo OWNER/NAME  install from this repository (or set SWM_REPOSITORY)
+  --ref REF          build a branch, tag or commit from source instead of a release, for example
+                     --ref dev before the first release. Fresh installs only; needs 4 GB of memory.
+  -h, --help         show this guide
+
+Private repository
+  Set GITHUB_TOKEN to a token that can read the repository, or fetch the installer with the GitHub CLI:
+    gh api "repos/OWNER/NAME/contents/install.sh?ref=dev" -H "Accept: application/vnd.github.raw" | bash -s -- --ref dev
 EOF
 }
 REPO_ARG=""
+SOURCE_REF=""
+usage() { printf 'Usage: install.sh [--repo owner/name] [--ref REF] [--help]\n' >&2; exit 64; }
 while (($# > 0)); do
   case "$1" in
     -h|--help) show_guide; exit 0 ;;
-    --repo) (($# > 1)) || { printf 'Usage: install.sh [--repo owner/name] [--help]\n' >&2; exit 64; }
-      REPO_ARG="$2"; shift ;;
+    --repo) (($# > 1)) || usage; REPO_ARG="$2"; shift ;;
     --repo=*) REPO_ARG="${1#--repo=}" ;;
-    *) printf 'Usage: install.sh [--repo owner/name] [--help]\n' >&2; exit 64 ;;
+    --ref) (($# > 1)) || usage; SOURCE_REF="$2"; shift ;;
+    --ref=*) SOURCE_REF="${1#--ref=}" ;;
+    *) usage ;;
   esac
   shift
 done
+# A branch, tag or commit name: letters, digits and ._/- only, never a path escape.
+if [[ -n "$SOURCE_REF" ]] && { [[ ! "$SOURCE_REF" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$ ]] || [[ "$SOURCE_REF" == *..* ]]; }; then
+  printf '[Space Works installer] ERROR: --ref takes a branch, tag or commit name.\n' >&2; exit 64
+fi
 # One command for everyone: --repo (or SWM_REPOSITORY) picks a fork up front;
 # otherwise a fresh install asks below, defaulting to the main project.
 [[ -z "$REPO_ARG" ]] || SWM_REPOSITORY="$REPO_ARG"
@@ -266,7 +283,24 @@ fetch() {
     die 'curl or wget is needed to read the questionnaire. Install one, then rerun.'
   fi
 }
-if [[ "$ACTION" == fresh ]]; then
+[[ -z "$SOURCE_REF" || "$ACTION" == fresh ]] || die "--ref installs fresh only. Use the update menu for an existing install."
+if [[ "$ACTION" == fresh && -n "$SOURCE_REF" ]]; then
+  # Source install: download the ref (with GITHUB_TOKEN for a private repository) and build the images here.
+  VERSION="source-${SOURCE_REF//\//-}"
+  RELEASE_TAG="$SOURCE_REF"
+  say "Building $SOURCE_REF from source."
+  ARCHIVE="$(mktemp)"
+  STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/.swmach-stage.XXXXXX")"
+  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    command -v curl >/dev/null 2>&1 || die 'curl is needed to download with GITHUB_TOKEN.'
+    curl --fail --silent --show-error --location -H "Authorization: Bearer $GITHUB_TOKEN" -H 'Accept: application/vnd.github+json' \
+      "https://api.github.com/repos/$REPOSITORY/tarball/$SOURCE_REF" -o "$ARCHIVE" || die "Could not download $SOURCE_REF from $REPOSITORY with GITHUB_TOKEN."
+  else
+    fetch "https://github.com/$REPOSITORY/archive/$SOURCE_REF.tar.gz" -o "$ARCHIVE" \
+      || die "Could not download $SOURCE_REF from $REPOSITORY. For a private repository set GITHUB_TOKEN."
+  fi
+fi
+if [[ "$ACTION" == fresh && -z "$SOURCE_REF" ]]; then
   release_json="$(fetch "$RELEASE_API")" \
     || die "No published release found for $REPOSITORY. Check the name (owner/name, as on GitHub). A fork must run its 'Continuous Release' workflow on main at least once before it can be installed."
   RELEASE_TAG="$(printf '%s' "$release_json" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
@@ -277,6 +311,8 @@ if [[ "$ACTION" == fresh ]]; then
   ARCHIVE="$(mktemp)"
   STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/.swmach-stage.XXXXXX")"
   fetch "https://github.com/$REPOSITORY/archive/refs/tags/$RELEASE_TAG.tar.gz" -o "$ARCHIVE"
+fi
+if [[ "$ACTION" == fresh ]]; then
   tar -xzf "$ARCHIVE" -C "$STAGE_DIR" --strip-components=1 --no-same-owner
   [[ -f "$STAGE_DIR/setup.sh" && -f "$STAGE_DIR/scripts/setup-questions.sh" \
      && -f "$STAGE_DIR/scripts/setup-question-input.sh" \
@@ -412,7 +448,11 @@ fi
 if [[ "$(id -u)" != 0 && ${#RUN_ROOT[@]} -gt 0 ]]; then
   ${RUN_ROOT[@]+"${RUN_ROOT[@]}"} chown "$(id -u):$(id -g)" "$INSTALL_DIR"
 fi
-run_installed "SWM_INSTALL_REPOSITORY_PINNED=1 SWM_REPOSITORY='$REPOSITORY' SWM_IMAGE_TAG='$VERSION' bash setup.sh"
+if [[ -n "$SOURCE_REF" ]]; then
+  run_installed "SWM_INSTALL_REPOSITORY_PINNED=1 SWM_REPOSITORY='$REPOSITORY' SWM_IMAGE_TAG=local bash setup.sh --build"
+else
+  run_installed "SWM_INSTALL_REPOSITORY_PINNED=1 SWM_REPOSITORY='$REPOSITORY' SWM_IMAGE_TAG='$VERSION' bash setup.sh"
+fi
 ${RUN_ROOT[@]+"${RUN_ROOT[@]}"} rm -f -- "$INSTALL_DIR/.spaceworks-answers"
 run_installed "printf '%s\\n' '$VERSION' > .spaceworks-version"
 say "Installed Space Works Machines $VERSION in $INSTALL_DIR."

@@ -95,23 +95,40 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
   `webhook-relay`), the printer adapter layer (`lib/printers`: manual and simulated working; OctoPrint,
   Moonraker, Bambu and PrusaLink stubs shown as "Coming soon"; beat `printer-poll` finishes jobs from
   telemetry), and the audit log page with CSV export.
+- Phase 6, Ship: `install.sh --ref REF` (source build of a branch, tag or commit, `GITHUB_TOKEN` for a private
+  repository), README in the Space Works layout with light/dark banners and real screenshots
+  (`npm run readme:art`, `npm run readme:screens` against the seeded demo), a fuller demo seed
+  (`scripts/seed-demo-workshop.mjs`), the colour-mode reveal from the Appearance setting with unit-tested maths
+  (`lib/themeReveal.ts`), two Machines easter eggs (layer ticker, "beep boop"), `docs/API.md`, VERSION 0.2.0.
 
-**How it was verified:** lint, typecheck, unit (557), integration (471, PostgreSQL), `build`, `build:jobs`,
+**How it was verified:** lint, typecheck, unit (580), integration (471, PostgreSQL), `build`, `build:jobs`,
 frontend typecheck and build, `frontend:catalog --check`, `prisma migrate diff` (no drift), and the production
 browser suites `test:e2e:vps` and `test:e2e:split` (17 tests each, signed-in journeys included). Those two
 scripts accept `--external-services` (use DATABASE_URL, REDIS_URL and optional S3_* from the environment instead
 of starting containers) and seed the demo when DEMO_PASSWORD is set. On Windows run them inside a Linux
-container: their server commands use POSIX syntax.
+container: their server commands use POSIX syntax. Also run for the ship: `SWM_COMPOSE_BUILD_LAYER=1 bash
+scripts/compose-smoke.sh` (bundled stack built from this checkout: operator checks, worker, beat, edge, backup
+and restore all passed) and shellcheck v0.10.0 on `install.sh setup.sh scripts/*.sh deploy/*.sh` (clean).
 
 ## What is left
 
-Phase 6 from `docs/plans/2026-10-23-machines-build.md`:
-6. Ship: README with real screenshots, one-line VPS install and Render deploy verified, e2e journeys,
-   design polish, and an independent review. Then open the `dev → main` PR for the owner.
+Everything in the build plan is built. What remains needs the owner's accounts or hardware:
+
+| Deferred check | Owner | Accepted when |
+| --- | --- | --- |
+| Real Render deploy from `render.yaml` | Shaan | The Blueprint deploys; web, worker and beat are healthy; sign-in, a job and an email work |
+| Real VPS install (release path, and `--ref dev` before the first release) | Shaan | A fresh Ubuntu server installs, `ops` checks pass, update, backup and restore work |
+| GHCR images and the first release | Shaan | The release workflow publishes both images and the installer pins and pulls them |
+| Live Razorpay and Stripe (test mode) | Shaan | One paid job and one refund per gateway settle through the real webhooks |
+| Real printers (OctoPrint, Moonraker, Bambu, PrusaLink) | Whoever builds them | Each adapter is implemented against real hardware and tested before it stops being "Coming soon" |
+
+Then open the `dev → main` PR for the owner.
 
 ## Open questions
 
 Decisions taken conservatively while building without the owner; change them if they're wrong.
+- `install.sh --ref` is for fresh installs only; a source install moves onto releases through the update menu.
+- Render runs on starter instances: its worker and beat services can't use the free plan.
 - Reports use UTC calendar days for their date range, not the space's time zone.
 - Revenue figures in reports need `payments.view` as well as `reports.view`.
 - A fault's reporter can add photos only within a day of reporting; makers can't see fault photos afterwards.

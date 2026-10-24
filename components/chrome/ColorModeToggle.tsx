@@ -3,6 +3,7 @@
 import { Moon, Sun } from "lucide-react";
 import { useAppColorMode } from "@/components/providers";
 import { IconButton } from "@/components/ui/button";
+import { centreOf } from "@/lib/themeReveal";
 
 export function ColorModeToggle({ variant = "quiet", size = "md" }: { variant?: "quiet" | "secondary"; size?: "sm" | "md" }) {
   const { mode, toggleColorMode } = useAppColorMode();
@@ -13,8 +14,7 @@ export function ColorModeToggle({ variant = "quiet", size = "md" }: { variant?: 
       variant={variant}
       size={size}
       onClick={(event) => {
-        const rect = event.currentTarget.getBoundingClientRect();
-        toggleColorMode({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+        toggleColorMode(centreOf(event.currentTarget.getBoundingClientRect()));
       }}
     >
       {/* Both icons stay mounted and cross-rotate, so the swap reads as one motion. */}

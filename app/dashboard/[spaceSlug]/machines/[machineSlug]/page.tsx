@@ -5,6 +5,7 @@ import { SpacePageHeader } from "@/components/dashboard/space/SpacePageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, Callout, Chip } from "@/components/ui/display";
 import { MachineStatusChip } from "@/components/machines/MachineStatusChip";
+import { BeepBoop } from "@/components/eggs/BeepBoop";
 import { MachineStatusDialog } from "@/components/machines/MachineStatusDialog";
 import { MachineRetireButton } from "@/components/machines/MachineRetireButton";
 import { MachineFlags } from "@/components/machines/MachineFlags";
@@ -24,7 +25,7 @@ export default async function MachinePage({ params }: { params: Promise<{ spaceS
     <div className="flex flex-col gap-7 pb-4">
       <div><Button asChild size="sm" variant="secondary"><Link href={`/dashboard/${space.slug}/machines`}>Back to machines</Link></Button></div>
       <SpacePageHeader space={space} title={machine.name} description={`${type.name}${type.archived ? " · Archived type" : ""}${details.location ? ` · ${details.location}` : ""}`}
-        actions={<><MachineStatusChip status={machine.status} />{machine.retired ? <Chip>Retired</Chip> : null}
+        actions={<><MachineStatusChip status={machine.status} /><BeepBoop machineId={machine.id} status={machine.status} />{machine.retired ? <Chip>Retired</Chip> : null}
           <Button asChild size="sm" variant="secondary"><Link href={`/dashboard/${space.slug}/machines/${machine.slug}/upkeep`}>Upkeep</Link></Button>
           {view.canPrinters ? <Button asChild size="sm" variant="secondary"><Link href={`/dashboard/${space.slug}/machines/${machine.slug}/printer`}>Printer</Link></Button> : null}
           {view.canChangeStatus && !machine.retired ? <MachineStatusDialog {...context} status={machine.status} note={machine.statusNote} /> : null}

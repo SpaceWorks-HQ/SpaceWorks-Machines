@@ -8,6 +8,7 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { seedWorkshop } from "./seed-demo-workshop.mjs";
 
 if (process.env.NODE_ENV === "production") throw new Error("seed-demo never runs in production.");
 const password = process.env.DEMO_PASSWORD ?? "";
@@ -130,6 +131,8 @@ if (!await prisma.maintenanceSchedule.findFirst({ where: { spaceId: tinkerspace.
   await prisma.maintenanceSchedule.create({ data: { spaceId: tinkerspace.id, machineId: drill.id, title: "Weekly inspection", trigger: "TIME", intervalDays: 7,
     nextDueAt: new Date(Date.now() - 86_400_000), checklist: ["Check the chuck", "Clean the table"], createdById: machines.id } });
 }
+
+await seedWorkshop(prisma, { space: tinkerspace, staff: machines, maker });
 
 await prisma.$disconnect();
 console.log(`seed-demo: ${spaces.length} spaces and 6 accounts (admin, owner, machines, viewer, maker, applicant @demo.test) ready.`);

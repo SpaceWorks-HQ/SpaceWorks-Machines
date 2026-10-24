@@ -4,6 +4,34 @@ Releases are published from `main` and titled **`Space Works Machines <version>`
 file selects the series; each build is tagged `v<series>-main.<run>.<sha>`, which is what a deployment pins
 to. Pushes to `dev` publish staging images tagged `dev` without a release.
 
+## 0.2.0 (Unreleased)
+
+The full machine management app: phases 2 to 6 on top of the 0.1.0 foundation.
+
+- **Machines.** Machine types (presets and custom) with their own spec fields, request fields, file rules,
+  materials and colours; machines with photos, documents, status and retirement; consumable pools with an
+  append-only ledger and low-stock alerts; public machine pages at `/s/[spaceSlug]/machines`.
+- **Jobs.** Requests with validated files (STL and G-code parsed for estimates), a queue with positions and an
+  estimated wait, the full lifecycle (review, start, pause, complete, fail, collect, reprint, notes) through one
+  transition service, the requester's job page and a private status link, the staff job board, and usage and
+  machine meters through one writer (`lib/usage/record.ts`).
+- **Prices and payments.** Free, flat, time, material and time-and-material pricing with member and public
+  rates and tax; payment upfront, on completion (with deposits) or pay later through Razorpay Payment Links,
+  Stripe Checkout or the desk (with an optional second-person check); refunds by rule or by staff; verified,
+  idempotent webhook settlement. Migration `0003_job_payments`.
+- **Upkeep.** Maintenance schedules by date, machine hours or job count with reminders and an optional
+  out-of-service block, maintenance records with attachments, downtime, fault reports (makers from the public
+  machine page), warranties with expiry reminders, per-machine service history, and reports with CSV export.
+- **Integrations.** REST API `/api/v1` with per-space keys and scopes and an OpenAPI document; signed outbound
+  webhooks with retries, auto switch-off and a delivery log; the printer adapter layer (manual and simulated
+  working; OctoPrint, Moonraker, Bambu and PrusaLink coming soon); the audit log page.
+- **Ship.** `install.sh --ref REF` builds a branch, tag or commit from source (with `GITHUB_TOKEN` for a private
+  repository); README in the Space Works layout with banners and real screenshots (`npm run readme:art`,
+  `npm run readme:screens`); a fuller demo seed; the colour-mode reveal now grows from the Appearance setting
+  too; two new easter eggs (the layer ticker and "beep boop").
+- **Tests.** The split and VPS browser suites accept `--external-services` and seed the demo, so signed-in
+  journeys run there too.
+
 ## 0.1.0 (Unreleased)
 
 Phase 1: the foundation for a multi-space machine management platform.

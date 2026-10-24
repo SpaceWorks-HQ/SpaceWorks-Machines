@@ -11,6 +11,7 @@ import { ActionDialog } from "@/components/upkeep/ActionDialog";
 import { DowntimeFields, FaultReportFields, LogFields, ScheduleFields, UsageFields, WarrantyFields } from "@/components/upkeep/fields";
 import { UpkeepFileUpload } from "@/components/upkeep/UpkeepFileUpload";
 import { ServiceHistory } from "@/components/upkeep/ServiceHistory";
+import { BeepBoop } from "@/components/eggs/BeepBoop";
 import { formatDate } from "@/lib/format/datetime";
 import { formatMoney, isCurrencyCode } from "@/lib/money/currencies";
 import { DUE_LABELS, dueText, FAULT_STATUS_LABELS, KIND_LABELS, REASON_LABELS, SEVERITY_LABELS, TRIGGER_LABELS, WARRANTY_LABELS } from "@/lib/upkeep/labels";
@@ -27,10 +28,10 @@ export default async function MachineUpkeepPage({ params }: { params: Promise<{ 
     <div className="flex flex-col gap-7 pb-4">
       <div><Button asChild size="sm" variant="secondary"><Link href={`/dashboard/${space.slug}/machines/${machine.slug}`}>Back to {machine.name}</Link></Button></div>
       <SpacePageHeader space={space} title={`Upkeep: ${machine.name}`} description={`${machine.hours} machine hours · ${machine.jobs} runs logged`}
-        actions={<><MachineStatusChip status={machine.status} />
+        actions={<><MachineStatusChip status={machine.status} /><BeepBoop machineId={machine.id} status={machine.status} />
           {view.canReport && !machine.retired ? <ActionDialog action={reportFaultAction} fixed={fixed} booleans={["takeOffline"]} trigger="Report a fault" title="Report a fault" submitLabel="Report fault" success="Fault reported"><FaultReportFields staff={canManage} /></ActionDialog> : null}
           {view.canLogUsage && !machine.retired ? <ActionDialog action={logManualUsageAction} fixed={fixed} booleans={["succeeded"]} trigger="Log a run" title="Log a run outside the queue" submitLabel="Log run" success="Run logged"><UsageFields pools={view.pools} /></ActionDialog> : null}
-          {canManage && !machine.retired ? (view.openDowntime
+          {canManage && !machine.retired && (view.openDowntime || (machine.status !== "RUNNING" && machine.status !== "PAUSED")) ? (view.openDowntime
             ? <ActionDialog action={endDowntimeAction} fixed={fixed} trigger="End downtime" triggerVariant="primary" title="End downtime" description="The machine goes back to idle." submitLabel="End downtime" success="Downtime ended"><p className="text-body-ui">End the open downtime window for {machine.name}?</p></ActionDialog>
             : <ActionDialog action={startDowntimeAction} fixed={fixed} trigger="Start downtime" title="Start downtime" submitLabel="Start downtime" success="Downtime started"><DowntimeFields /></ActionDialog>) : null}</>} />
 

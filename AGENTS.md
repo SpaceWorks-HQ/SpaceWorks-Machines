@@ -142,6 +142,13 @@ Run one unit test file: `npx vitest run tests/unit/permission-roles.test.ts`.
   - Staff chat alerts (Slack, Discord, Mattermost, Telegram, WhatsApp) are queued with `queueChatAlerts` in the
     event's transaction (`lib/chat/*`); events are listed in `lib/chat/events.ts`. Space secrets use
     `encryptSpaceSecret`; hosts a space types in must pass `assertPublicHost`.
+- **Single writers.** Job status changes only in `lib/jobs/transitions.ts`; usage logs and machine meters only in
+  `lib/usage/record.ts`; consumable quantities only through `lib/consumables`. Upkeep lives in `lib/upkeep`
+  (schedules, records, downtime, faults, warranty, sweeps), reports in `lib/reports` (pure maths in `compute.ts`).
+- **Integrations.** `/api/v1` routes go through `apiRoute` (`lib/api/handler.ts`): key, scope, and for writes the
+  key creator's current capability. Webhooks: `emitWebhook` in the change's transaction, delivery and retries in
+  `lib/webhooks/deliver.ts`. Printers: adapters in `lib/printers`; only the manual and simulated ones are
+  available, the rest stay "Coming soon" until they are built and tested against real hardware.
 - **Files:** private S3-compatible storage (`lib/storage/`), served only through `/api/uploads/...`; images
   pass `lib/imageValidation.ts` (re-encoded, metadata stripped).
 - **Frontend gateway:** pages read data only through loaders in `lib/views/` (one file per route, named after
