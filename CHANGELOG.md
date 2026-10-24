@@ -1,0 +1,73 @@
+# Changelog
+
+Releases are published from `main` and titled **`Space Works Machines <version>`**. The root `VERSION`
+file selects the series; each build is tagged `v<series>-main.<run>.<sha>`, which is what a deployment pins
+to. Pushes to `dev` publish staging images tagged `dev` without a release.
+
+## 0.2.0 (Unreleased)
+
+The full machine management app: phases 2 to 6 on top of the 0.1.0 foundation.
+
+- **Machines.** Machine types (presets and custom) with their own spec fields, request fields, file rules,
+  materials and colours; machines with photos, documents, status and retirement; consumable pools with an
+  append-only ledger and low-stock alerts; public machine pages at `/s/[spaceSlug]/machines`.
+- **Jobs.** Requests with validated files (STL and G-code parsed for estimates), a queue with positions and an
+  estimated wait, the full lifecycle (review, start, pause, complete, fail, collect, reprint, notes) through one
+  transition service, the requester's job page and a private status link, the staff job board, and usage and
+  machine meters through one writer (`lib/usage/record.ts`).
+- **Prices and payments.** Free, flat, time, material and time-and-material pricing with member and public
+  rates and tax; payment upfront, on completion (with deposits) or pay later through Razorpay Payment Links,
+  Stripe Checkout or the desk (with an optional second-person check); refunds by rule or by staff; verified,
+  idempotent webhook settlement. Migration `0003_job_payments`.
+- **Upkeep.** Maintenance schedules by date, machine hours or job count with reminders and an optional
+  out-of-service block, maintenance records with attachments, downtime, fault reports (makers from the public
+  machine page), warranties with expiry reminders, per-machine service history, and reports with CSV export.
+- **Integrations.** REST API `/api/v1` with per-space keys and scopes and an OpenAPI document; signed outbound
+  webhooks with retries, auto switch-off and a delivery log; the printer adapter layer (manual and simulated
+  working; OctoPrint, Moonraker, Bambu and PrusaLink coming soon); the audit log page.
+- **Ship.** `install.sh --ref REF` builds a branch, tag or commit from source (with `GITHUB_TOKEN` for a private
+  repository); README in the Space Works layout with banners and real screenshots (`npm run readme:art`,
+  `npm run readme:screens`); a fuller demo seed; the colour-mode reveal now grows from the Appearance setting
+  too; two new easter eggs (the layer ticker and "beep boop").
+- **Tests.** The split and VPS browser suites accept `--external-services` and seed the demo, so signed-in
+  journeys run there too.
+
+## 0.1.0 (Unreleased)
+
+Phase 1: the foundation for a multi-space machine management platform.
+
+- **Forked from the Space Works Organization platform** (0.7.0). Its platform layer (accounts, spaces as
+  tenants, super admin, outbox email, chat alerts, payment settings, storage, installer, updater, release
+  pipeline and split hosting) carries over; the membership domain (plans, memberships, renewals, member cards,
+  receipts and GST documents, accounts, refunds and reports) is removed.
+- **Spaces as tenants.** `Space` holds a makerspace's profile, address, time zone (default Asia/Kolkata),
+  currency (default INR) and locale, its review status, the super admin's `PUBLIC` or `UNLISTED` visibility,
+  member and staff limits, and the offline-payment maker-checker setting. Spaces apply at `/start` or are
+  created by the super admin; public pages live at `/s/[spaceSlug]` and listed spaces at `/spaces`.
+  Cross-space access returns 404.
+- **Roles.** OWNER, MANAGER ("Space manager"), MACHINE_MANAGER ("Machine manager"), OPERATOR, TECHNICIAN and
+  VIEWER are staff; MEMBER ("Maker") submits jobs. Capabilities are defined once in `lib/permissionRoles.ts`.
+  Staff need an authenticator app; makers never do. Space managers cannot change owners or other managers.
+- **Joining.** Join policies OPEN, APPROVAL and INVITE_ONLY, invites by link or email, approval of waiting
+  makers, and seat limits.
+- **Sign-in.** Email and password, or an emailed magic link (15 minutes, single use, stored hashed, rate
+  limited, the same answer for unknown addresses, never for super admins; `/login/link` waits for a button
+  press). Authenticator MFA with recovery codes, new-browser codes and alerts, automatic address blocking and
+  breached-password checks carry over. The Google, GitHub and Apple providers and their `AUTH_GOOGLE_*`,
+  `AUTH_GITHUB_*` and `AUTH_APPLE_*` settings are removed.
+- **Per-space settings.** Razorpay or Stripe keys (encrypted with `PAYMENT_SECRETS_KEY`) with verified,
+  once-only webhooks, offline payment instructions, the space's own SMTP sender, and chat alerts to Slack,
+  Discord, Mattermost, Telegram and WhatsApp for join requests and makers joining or leaving. Every settings
+  change is audited (`SPACE_SETTINGS_CHANGED`) with the changed field names only.
+- **Background jobs on BullMQ.** A `worker` and a `beat` role (`npm run build:jobs`, `dist/worker.js` and
+  `dist/beat.js`) replace the scheduler pass: queues `outbox`, `scheduled` and `sync`, a job registry in
+  `lib/queue/registry.ts`, and `/health` on `JOBS_HEALTH_PORT`. New settings `JOBS_QUEUE_PREFIX`,
+  `JOBS_HEALTH_PORT`, `JOBS_INPROCESS` (development only) and `QUEUE_<NAME>_CONCURRENCY`. `POST
+  /api/internal/jobs` joins `/api/internal/outbox` as the `CRON_SECRET` fallback for hosts without a beat.
+  The `scheduler` role, its Compose services and `SCHEDULER_MODE` are removed.
+- **Database.** A fresh schema with one migration, `0001_init`.
+- **Machines branding.** Space Works Machines name, landing page, images
+  (`spaceworks-machines-backend` and `-frontend`), host paths (`/opt/spaceworks-machines`,
+  `/etc/spaceworks-machines`), `SWM_` settings and the `swmach` and `swmach_app` database roles.
+- **Dashboard.** Overview, Team and Space settings work; Machines, Jobs, Maintenance, Consumables, Payments,
+  Reports, Integrations and Machine settings are placeholders for later phases.
